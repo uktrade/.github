@@ -1,5 +1,5 @@
 # Security Policy
-The Department for International Trade (DIT) secure UK and global prosperity by promoting and financing international trade and investment, and championing free trade. Read more about what we do on [GOV.UK](https://www.gov.uk/government/organisations/department-for-international-trade/aboutt)
+The Department for International Trade (DIT) secure UK and global prosperity by promoting and financing international trade and investment, and championing free trade. Read more about what we do on [GOV.UK](https://www.gov.uk/government/organisations/department-for-international-trade/about)
 
 ## Reporting a Vulnerability
 
