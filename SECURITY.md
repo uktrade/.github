@@ -1,5 +1,6 @@
 # Security Policy
-The Department for International Trade (DIT) secure UK and global prosperity by promoting and financing international trade and investment, and championing free trade. Read more about what we do on [GOV.UK](https://www.gov.uk/government/organisations/department-for-international-trade/about)
+
+The Department for Business and Trade (DBT) supports businesses to invest, grow and export, creating jobs and opportunities across the country. Read more about what we do on [GOV.UK](https://www.gov.uk/government/organisations/department-for-business-and-trade/about).
 
 ## Reporting a Vulnerability
 
@@ -16,4 +17,4 @@ Vulnerability reporting guidelines
 - To submit your report, you will need to agree to the HackerOne Terms and Conditions and acknowledge that you have read their Privacy Policy and Disclosure Guidelines
 -	Once you have submitted the report, it will be assessed by NCC Group within five working days, and forwarded to the affected owners as soon as possible. 
 
-The DIT Cyber Team will attempt to make contact with the affected owner. However, the affected owner holds responsibility for resolving the issue.
+The DBT Cyber Team will attempt to make contact with the affected owner. However, the affected owner holds responsibility for resolving the issue.
