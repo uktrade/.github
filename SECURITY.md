@@ -2,7 +2,7 @@
 
 The Department for Business and Trade (DBT) supports businesses to invest, grow and export, creating jobs and opportunities across the country. Read more about what we do on [GOV.UK](https://www.gov.uk/government/organisations/department-for-business-and-trade/about).
 
-## Reporting a Vulnerability
+## Reporting a vulnerability
 
 If you believe you have found a security vulnerability, please submit your report to us using [here](https://hackerone.com/2680e4cd-0436-42a5-bd2a-37fd86367276/embedded_submissions/new)
 In your report please include details of:
@@ -18,3 +18,17 @@ Vulnerability reporting guidelines
 -	Once you have submitted the report, it will be assessed by NCC Group within five working days, and forwarded to the affected owners as soon as possible. 
 
 The DBT Cyber Team will attempt to make contact with the affected owner. However, the affected owner holds responsibility for resolving the issue.
+
+## Reporting a leaked secret
+
+Once a secret scanning alert has been generated, the associated secret should be considered compromised and a cyber security incident raised.
+
+During response to a secret scanning alert, repository admins must take the following actions to enable eﬀective triage
+and mitigation:
+- Determine if the identified secret is still active (i.e., has not been rotated or is yet to be revoked) and therefore can still be exploited. Remediation of alerts that relate to active secrets must be prioritised for remediation;
+- Examine secret metadata to gather contextual information related to the secret (e.g when
+the secret was created and when it was last used);
+- As necessary, remove the secret from the repository and purge the repository history;
+- Liaise with the appropriate organisation owner to review the repository audit log to further
+determine the extent and impact of the actions taken by an attacker (if any) using the exposed secret
+
