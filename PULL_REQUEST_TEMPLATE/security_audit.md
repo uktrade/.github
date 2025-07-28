@@ -2,7 +2,7 @@
 
 DBT GitHub repositories need to follow security standards. This template helps repository admins to review and log adherence to the security standards.
 
-To use this template, raise a pull request and add `&template=security_audit.md` to the URL.
+To use this template, raise a pull request and add `&template=security_audit.md&labels=security` to the URL. You'll need to create a security label if it's not there already.
 
 ### Automated Scanning
 
@@ -16,6 +16,7 @@ To use this template, raise a pull request and add `&template=security_audit.md`
 
 - [ ] Default pull_request_template.md has been updated with project-specific information
 - [ ] CONTRIBUTING.md contains project-specific advice and explain the code review process
+- [ ] Branch protection rules fo
 
 ### Incidents
 
