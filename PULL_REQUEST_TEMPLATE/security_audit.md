@@ -14,13 +14,13 @@ To use this template, raise a pull request and add `&template=security_audit.md&
 
 ### Code Review
 
-- [ ] Default pull_request_template.md has been updated with project-specific information
+- [ ] There is a default [`pull_request_template.md`] based on the organisation [`pull_request_template.md`], with additional project-specific information
 - [ ] CONTRIBUTING.md contains project-specific advice and explain the code review process
-- [ ] Branch protection rules fo
+- [ ] Organisation branch protection rules are enabled       
 
 ### Incidents
 
-- [ ] SECURITY.md is imported or updated with project-specific information
+- [ ] The organisation [SECURITY.md] is imported or updated with project-specific information
 - [ ] Contributors are aware of the implications of and risks associated with committing to a UK goverment department's public repository
 - [ ] Contributors are familiar with the incident management response documented in SECURITY.md
 
