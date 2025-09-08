@@ -13,6 +13,7 @@ on:
       - dev
 
 jobs: 
+  if: ${{ hashFiles('Dockerfile') != '' }}
   validate:
     name: Validate Dockerfile
     runs-on: ubuntu-latest
