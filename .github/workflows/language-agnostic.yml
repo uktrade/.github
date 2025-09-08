@@ -33,7 +33,6 @@ jobs:
       with:
         path: ./
         base: ${{ github.head_ref }}
-        head: HEAD
 
     - name: Scan Results Status 
       if: steps.trufflehog.outcome == 'failure' 
