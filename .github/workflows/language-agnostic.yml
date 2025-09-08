@@ -34,7 +34,7 @@ jobs:
         path: ./
         base: ${{ github.head_ref || github.ref_name }} 
         head: HEAD
-        extra_args: --debug --only-verified
+        extra_args: --only-verified
 
     - name: Scan Results Status 
       if: steps.trufflehog.outcome == 'failure' 
