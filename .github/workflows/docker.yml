@@ -13,7 +13,6 @@ on:
       - dev
 
 jobs: 
-  if: ${{ hashFiles('Dockerfile') != '' }}
   validate:
     name: Validate Dockerfile
     runs-on: ubuntu-latest
@@ -22,6 +21,7 @@ jobs:
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
     
     - name: Validate Dockerfile with dockerfile-validator
+      if: ${{ hashFiles('Dockerfile') != '' }}
       uses: ghe-actions/dockerfile-validator@12ed0b63096a928bd3db6fc47d482b6f462ab9c6
       with:
         dockerfile: 'Dockerfile'
@@ -36,9 +36,11 @@ jobs:
 ##      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 ##
 ##    - name: Build Docker image from Dockerfile
+##      if: ${{ hashFiles('Dockerfile') != '' }}
 ##      run: docker build -t ${{ github.event.repository.name }}:${{ github.sha }} .
 ##
 ##    - name: Run Trivy scanner against image
+##      if: ${{ hashFiles('Dockerfile') != '' }}
 ##      uses: aquasecurity/trivy-action@dc5a429b52fcf669ce959baa2c2dd26090d2a6c4
 ##      with:
 ##        scan-type: 'image'
