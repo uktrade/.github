@@ -34,6 +34,10 @@ jobs:
         path: ./
         base: ${{ github.head_ref || github.ref_name }} 
         head: HEAD
+<<<<<<< HEAD
+=======
+        extra_args: --debug --only-verified
+>>>>>>> 1b094f6 (chore: rename directories)
 
     - name: Scan Results Status 
       if: steps.trufflehog.outcome == 'failure' 
