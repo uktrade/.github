@@ -1,0 +1,28 @@
+name: Docker Workflow
+
+on: 
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+
+    branches:
+      - main
+      - master
+      - dev
+
+jobs: 
+  validate:
+    name: Validate Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+    
+    - name: Validate Dockerfile with dockerfile-validator
+      if: ${{ hashFiles('Dockerfile') != '' }}
+      uses: ghe-actions/dockerfile-validator@12ed0b63096a928bd3db6fc47d482b6f462ab9c6
+      with:
+        dockerfile: 'Dockerfile'
+        lint: 'dockerlint'
