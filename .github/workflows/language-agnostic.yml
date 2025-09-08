@@ -1,0 +1,41 @@
+name: Language Agnostic Workflow
+
+on:
+  pull_request:
+    types:
+      - edited
+      - opened
+      - reopened
+
+    branches:
+      - main
+      - master
+      - dev
+
+jobs:
+  trufflehog:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    permissions: 
+      contents: read 
+    steps: 
+    - name: Checkout repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        fetch-depth: 0
+    
+    - name: Scan with Trufflehog
+      id: trufflehog
+      uses: trufflesecurity/trufflehog@6641d4ba5b684fffe195b9820345de1bf19f3181
+      continue-on-error: true
+      with:
+        path: ./
+        base: ${{ github.head_ref || github.ref_name }} 
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Scan Results Status 
+      if: steps.trufflehog.outcome == 'failure' 
+      run: exit 1
