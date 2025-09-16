@@ -18,7 +18,8 @@ env:
 jobs:
   org-wide-pre-commit-check: # This should be in the language-agnostic once pre-commit has been rolled out across all repos
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
     steps:
       - name: Checkout current repo
         uses: actions/checkout@v5
