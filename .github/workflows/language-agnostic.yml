@@ -21,20 +21,16 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-
-      - name: Scan with Trufflehog
-        id: trufflehog
-        uses: trufflesecurity/trufflehog@6641d4ba5b684fffe195b9820345de1bf19f3181
-        continue-on-error: true
-        with:
-          path: ./
-          base: ${{ github.head_ref }}
-          extra_args: --only-verified
-
-      - name: Scan Results Status
-        if: steps.trufflehog.outcome == 'failure'
-        run: exit 1
+      # Disable for now, while trufflehog is going through IRAP
+      # - name: Run TruffleHog scan
+      #   run: |
+      #     docker run --rm -v ${{ github.workspace }}:/repo \
+      #       trufflesecurity/trufflehog:3.8.6 \
+      #       git file:///repo \
+      #       --since-commit main \
+      #       --branch ${{ github.head_ref }} \
+      #       --github-actions \
+      #       --fail
