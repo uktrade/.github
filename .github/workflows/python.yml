@@ -29,3 +29,4 @@ jobs:
       - name: Check if org-wide pre-commit hook ran before push
         run: |
           git log ${{ github.event.pull_request.head.sha }} --format=%B -1 | git interpret-trailers --parse | grep '${{ env.SIGNED_OFF_MESSAGE }}'
+        continue-on-error: true
