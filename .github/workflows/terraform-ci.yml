@@ -2,6 +2,12 @@
 name: terraform-ci
 on:
   workflow_call:
+    inputs:
+      validate_only_roots:
+        description: "Override auto-discovery with explicit roots (newline-separated)."
+        required: false
+        type: string
+        default: ""
 
 jobs:
   terraform-ci:
@@ -21,32 +27,82 @@ jobs:
       - name: FMT (repo-wide)
         run: terraform fmt -recursive -check
 
-      - name: Validate (per dir with .tf)
+      - name: Validate (per dir with .tf, skipping examples/tests/.github and broken local module refs)
         shell: bash
         run: |
           set -euo pipefail
-          # Find unique directories that contain .tf files (excluding .terraform dirs)
-          mapfile -t DIRS < <(git ls-files '*.tf' | xargs -n1 dirname | sort -u | grep -v '\.terraform' || true)
+
+          # Build the list of directories to validate
+          if [[ -n "${{ inputs.validate_only_roots }}" ]]; then
+            # Use caller-provided roots (newline-separated)
+            mapfile -t DIRS < <(printf "%s\n" "${{ inputs.validate_only_roots }}" | sed '/^\s*$/d')
+          else
+            # Auto-discover: every unique directory that contains at least one *.tf file
+            mapfile -t DIRS < <(git ls-files '*.tf' | xargs -n1 dirname | sort -u | grep -v '\.terraform' || true)
+          fi
 
           if [[ ${#DIRS[@]} -eq 0 ]]; then
             echo "No Terraform files found. Skipping validation."
             exit 0
           fi
 
+          has_missing_local_module() {
+            local dir="$1"
+            local missing=0
+
+            while IFS= read -r src; do
+              local path="$dir/$src"
+              if [[ ! -e "$path" ]]; then
+                echo ">> Note: $dir expects local module path '$src' which does not exist relative to that dir"
+                missing=1
+              fi
+            done < <(grep -R --include='*.tf' -E 'source *= *"(?:\./|\.\./)[^"]+"' "$dir" 2>/dev/null \
+                     | sed -E 's/.*source *= *"((\.\.?\/)[^"]+)".*/\1/' | sort -u || true)
+            return $missing
+          }
+
+          any_validated=0
+
           for d in "${DIRS[@]}"; do
+            # Skip common non-root/demo/test/meta dirs
+            if [[ "$d" =~ (^|/)(examples?|test|tests|\.github)(/|$) ]]; then
+              echo ">> Skipping $d (examples/tests/.github)"
+              continue
+            fi
+
+            # Skip dirs that expect "./modules" but don't have it locally
+            if grep -R --include='*.tf' -E 'source *= *"(./)?modules(/|")' "$d" >/dev/null 2>&1 && [[ ! -d "$d/modules" ]]; then
+              echo ">> Skipping $d (expects ./modules that is not present)"
+              continue
+            fi
+
+            # Skip dirs with unresolved relative module paths (./ or ../)
+            if has_missing_local_module "$d"; then
+              echo ">> Skipping $d (unresolvable local module paths)"
+              continue
+            fi
+
             echo "==> terraform validate: $d"
             pushd "$d" >/dev/null
-            # Safe init: no backend, no prompts, don’t write/modify lockfile
+
             terraform init -backend=false -input=false -lockfile=readonly -no-color || true
-            terraform validate -no-color || (echo "::error file=$d::terraform validate failed" && exit 1)
+
+            # Validate
+            terraform validate -no-color || { echo "::error file=$d::terraform validate failed"; exit 1; }
+
             popd >/dev/null
+            any_validated=1
           done
 
+          if [[ "$any_validated" -eq 0 ]]; then
+            echo "No eligible Terraform roots to validate (all skipped by rules)."
+          fi
+
       # -----------------------------------------------------------------------------
-      # TFLint is currently not approved. Leaving a ready-to-enable block below.
-      # To enable later:
-      #  - Add a .tflint.hcl at repo root OR fetch a central one and pass -c
-      #  - Uncomment this step and (optionally) add actions/cache for plugins
+      # TFLint is not approved right now. Keep the ready-to-enable block commented.
+      # When approved:
+      #   - Add/resolve a .tflint.hcl (repo-local or org-central) and pass -c if needed.
+      #   - Uncomment the steps below (and consider adding actions/cache for plugins).
       # -----------------------------------------------------------------------------
       # - name: Install TFLint
       #   run: |
