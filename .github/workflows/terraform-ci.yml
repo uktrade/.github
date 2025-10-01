@@ -4,18 +4,17 @@ name: terraform-ci
 on:
   workflow_call:
     inputs:
-      validate_only_roots:
-        description: "Newline-separated list of terraform roots (e.g. '.', 'envs/dev', 'envs/prod'). If empty, validates only '.'"
-        required: false
-        type: string
-        default: ""
       run_tflint:
         description: "Run TFLint after fmt/validate."
         required: false
         type: boolean
         default: false
+      extra_skip_globs:
+        description: "Newline-separated patterns to skip (e.g., 'sandbox/*')."
+        required: false
+        type: string
+        default: ""
 
-  # Optional: allow running directly on PRs if you also mark this as a Required Workflow
   pull_request:
     types: [opened, edited, reopened, synchronize]
     branches: [main, master, dev]
@@ -35,13 +34,13 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Keep the provider cache OUT of the fmt step to avoid warnings.
+      # Keep fmt clean of provider cache warnings
       - name: FMT (repo-wide)
         env:
           TF_PLUGIN_CACHE_DIR: ""
         run: terraform fmt -recursive -check
 
-      # Configure provider cache only for init/validate (optional but fast)
+      # Prepare provider plugin cache for init/validate
       - name: Prepare Terraform plugin cache
         shell: bash
         run: |
@@ -57,26 +56,88 @@ jobs:
           restore-keys: |
             tf-plugins-${{ runner.os }}-
 
-      - name: Validate (simple, explicit roots)
+      - name: Discover Terraform roots
+        id: discover
         shell: bash
         run: |
           set -euo pipefail
 
-          if [[ -n "${{ inputs.validate_only_roots }}" ]]; then
-            # newline-separated list to bash array
-            mapfile -t DIRS < <(printf "%s\n" "${{ inputs.validate_only_roots }}" | sed '/^\s*$/d')
-          else
-            DIRS=(.)
+          # 1) Start from tracked .tf / .tf.json files
+          mapfile -t CANDIDATES < <(git ls-files -- '*.tf' '*.tf.json' 2>/dev/null | xargs -n1 dirname | sort -u)
+
+          # 2) Built-in skips (noise dirs)
+          skip_regex='(^|/)(\.terraform|\.github|\.git|node_modules|vendor|examples?|test|tests|docs)(/|$)'
+
+          # 3) Optional extra skips from input (newline-separated -> regex OR)
+          EXTRA_SKIP="${{ inputs.extra_skip_globs }}"
+          if [[ -n "$EXTRA_SKIP" ]]; then
+            # Escape dots and slashes a bit and join with |
+            extra_regex="$(printf '%s\n' "$EXTRA_SKIP" | sed -E 's/[.[\]{}()+*^$\\|]/\\&/g; s,/,\\/,g' | paste -sd'|' -)"
+            skip_regex="(${skip_regex}|${extra_regex})"
           fi
+
+          # 4) Build final DIRS list, ensuring each has at least one *.tf / *.tf.json
+          declare -a DIRS=()
+          for d in "${CANDIDATES[@]}"; do
+            [[ "$d" =~ $skip_regex ]] && continue
+            shopt -s nullglob
+            tf_files=( "$d"/*.tf "$d"/*.tf.json )
+            shopt -u nullglob
+            [[ ${#tf_files[@]} -eq 0 ]] && continue
+            DIRS+=("$d")
+          done
+
+          if [[ ${#DIRS[@]} -eq 0 ]]; then
+            echo "dirs=" >> "$GITHUB_OUTPUT"
+            echo "No Terraform files found. Skipping validation."
+            exit 0
+          fi
+
+          printf '%s\n' "${DIRS[@]}"
+          # Save as newline-separated for next step
+          {
+            printf 'dirs<<EOF\n'
+            printf '%s\n' "${DIRS[@]}"
+            printf 'EOF\n'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate (auto-discovered roots)
+        if: steps.discover.outputs.dirs != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Read newline-separated list from previous step
+          mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.dirs }}")
 
           echo "Validating roots:"
           printf ' - %s\n' "${DIRS[@]}"
 
+          failed=()
+
           for d in "${DIRS[@]}"; do
             echo "==> terraform validate: $d"
-            terraform -chdir="$d" init -backend=false -input=false -lockfile=readonly -no-color
-            terraform -chdir="$d" validate -no-color
+
+            # Use readonly lockfile only if present to avoid churn
+            lockflag=()
+            [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
+
+            if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color; then
+              echo "::warning file=$d::terraform init failed (skipping validate for this root)"
+              failed+=("$d (init failed)")
+              continue
+            fi
+
+            if ! terraform -chdir="$d" validate -no-color; then
+              echo "::error file=$d::terraform validate failed"
+              failed+=("$d (validate failed)")
+            fi
           done
+
+          if [[ ${#failed[@]} -gt 0 ]]; then
+            echo "The following roots failed:"
+            printf ' - %s\n' "${failed[@]}"
+            exit 1
+          fi
 
       - name: Setup TFLint
         if: ${{ inputs.run_tflint }}
@@ -91,17 +152,12 @@ jobs:
           restore-keys: |
             tflint-plugins-${{ runner.os }}-
 
-      - name: TFLint (explicit roots; defaults to '.')
-        if: ${{ inputs.run_tflint }}
+      - name: TFLint (auto-discovered roots)
+        if: ${{ inputs.run_tflint && steps.discover.outputs.dirs != '' }}
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -n "${{ inputs.validate_only_roots }}" ]]; then
-            mapfile -t DIRS < <(printf "%s\n" "${{ inputs.validate_only_roots }}" | sed '/^\s*$/d')
-          else
-            DIRS=(.)
-          fi
-
+          mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.dirs }}")
           for d in "${DIRS[@]}"; do
             echo "==> tflint $d"
             (cd "$d" && tflint --init && tflint)
