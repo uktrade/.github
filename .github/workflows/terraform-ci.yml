@@ -26,8 +26,7 @@ jobs:
       contents: read
     env:
       TF_IN_AUTOMATION: "true"
-      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
-      TF_CI_DEBUG: "false"  # set to "true" in the caller to see extra local-module debug
+      TF_CI_DEBUG: "false"  # set to "true" in the caller to see scanner debug
 
     steps:
       - name: Checkout
@@ -36,16 +35,19 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Prepare Terraform plugin cache dir
+      # Set an absolute plugin cache path and ensure it exists,
+      # then export it to all subsequent steps via GITHUB_ENV.
+      - name: Configure Terraform plugin cache env
         shell: bash
         run: |
           set -euo pipefail
+          echo "TF_PLUGIN_CACHE_DIR=$HOME/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
           mkdir -p "$HOME/.terraform.d/plugin-cache"
 
       - name: Cache Terraform plugins
         uses: actions/cache@v4
         with:
-          path: ~/.terraform.d/plugin-cache
+          path: ${{ env.HOME }}/.terraform.d/plugin-cache
           key: tf-plugins-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
           restore-keys: |
             tf-plugins-${{ runner.os }}-
@@ -78,7 +80,6 @@ jobs:
               echo ">> DEBUG: scanning only '$dir' (non-recursive) for local module sources"
             fi
 
-            # Non-recursive scan: only consider *.tf files directly inside $dir
             while IFS= read -r src; do
               # Only consider *true* local paths that begin with ./ or ../
               if [[ "$src" =~ ^(\.\/|\.\.\/) ]]; then
@@ -115,10 +116,10 @@ jobs:
             echo "==> terraform validate: $d"
             pushd "$d" >/dev/null
 
-            # Lightweight init: no backend, no interactive input, respect lockfile
+      
             terraform init -backend=false -input=false -lockfile=readonly -no-color || true
-
             terraform validate -no-color || { echo "::error file=$d::terraform validate failed"; exit 1; }
+
             popd >/dev/null
             any_validated=1
           done
