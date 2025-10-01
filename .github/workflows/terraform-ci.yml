@@ -78,8 +78,6 @@ jobs:
             if [[ "${TF_CI_DEBUG:-false}" == "true" ]]; then
               echo ">> DEBUG: scanning only '$dir' (non-recursive) for local module sources"
             fi
-
-            # Non-recursive scan: only consider *.tf files directly inside $dir
             while IFS= read -r src; do
               # Only consider *true* local paths that begin with ./ or ../
               if [[ "$src" =~ ^(\.\/|\.\.\/) ]]; then
@@ -101,13 +99,10 @@ jobs:
 
           any_validated=0
           for d in "${DIRS[@]}"; do
-            # Skip noisy locations
             if [[ "$d" =~ (^|/)(examples?|test|tests|\.github)(/|$) ]]; then
               echo ">> Skipping $d (examples/tests/.github)"
               continue
             fi
-
-            # Gate on resolvable local modules only (non-recursive check)
             if has_missing_local_module "$d"; then
               echo ">> Skipping $d (unresolvable local module paths)"
               continue
@@ -115,10 +110,7 @@ jobs:
 
             echo "==> terraform validate: $d"
             pushd "$d" >/dev/null
-
-            # Lightweight init: no backend, no interactive input, respect lockfile
             terraform init -backend=false -input=false -lockfile=readonly -no-color || true
-
             terraform validate -no-color || { echo "::error file=$d::terraform validate failed"; exit 1; }
             popd >/dev/null
             any_validated=1
