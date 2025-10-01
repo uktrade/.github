@@ -1,0 +1,103 @@
+# .github/workflows/terraform-ci.yml
+name: terraform-ci
+on:
+  workflow_call:
+    inputs:
+      validate_only_roots:
+        description: "Override auto-discovery with explicit roots (newline-separated)."
+        required: false
+        type: string
+        default: ""
+      run_tflint:
+        description: "Run TFLint after fmt/validate."
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  terraform-ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      TF_IN_AUTOMATION: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: FMT (repo-wide)
+        run: terraform fmt -recursive -check
+
+      - name: Validate (per dir with .tf, skipping examples/tests/.github and broken local module refs)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${{ inputs.validate_only_roots }}" ]]; then
+            mapfile -t DIRS < <(printf "%s\n" "${{ inputs.validate_only_roots }}" | sed '/^\s*$/d')
+          else
+            mapfile -t DIRS < <(git ls-files '*.tf' | xargs -n1 dirname | sort -u | grep -v '\.terraform' || true)
+          fi
+          if [[ ${#DIRS[@]} -eq 0 ]]; then
+            echo "No Terraform files found. Skipping validation."
+            exit 0
+          fi
+          has_missing_local_module() {
+            local dir="$1" missing=0
+            while IFS= read -r src; do
+              local path="$dir/$src"
+              [[ -e "$path" ]] || { echo ">> Note: $dir expects local module '$src' (missing)"; missing=1; }
+            done < <(grep -R --include='*.tf' -E 'source *= *"(?:\./|\.\./)[^"]+"' "$dir" 2>/dev/null \
+                     | sed -E 's/.*source *= *"((\.\.?\/)[^"]+)".*/\1/' | sort -u || true)
+            return $missing
+          }
+          any_validated=0
+          for d in "${DIRS[@]}"; do
+            if [[ "$d" =~ (^|/)(examples?|test|tests|\.github)(/|$) ]]; then
+              echo ">> Skipping $d (examples/tests/.github)"; continue
+            fi
+            if grep -R --include='*.tf' -E 'source *= *"(./)?modules(/|")' "$d" >/dev/null 2>&1 && [[ ! -d "$d/modules" ]]; then
+              echo ">> Skipping $d (expects ./modules not present)"; continue
+            fi
+            if has_missing_local_module "$d"; then
+              echo ">> Skipping $d (unresolvable local module paths)"; continue
+            fi
+            echo "==> terraform validate: $d"
+            pushd "$d" >/dev/null
+            terraform init -backend=false -input=false -lockfile=readonly -no-color || true
+            terraform validate -no-color || { echo "::error file=$d::terraform validate failed"; exit 1; }
+            popd >/dev/null
+            any_validated=1
+          done
+          [[ "$any_validated" -eq 0 ]] && echo "No eligible Terraform roots to validate (all skipped)."
+
+      - name: Setup TFLint
+        if: ${{ inputs.run_tflint }}
+        uses: terraform-linters/setup-tflint@v4
+
+      - name: Cache TFLint plugins
+        if: ${{ inputs.run_tflint }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.tflint.d/plugins
+          key: tflint-plugins-${{ runner.os }}-${{ hashFiles('**/.tflint.hcl') }}
+          restore-keys: |
+            tflint-plugins-${{ runner.os }}-
+
+      - name: TFLint (per dir)
+        if: ${{ inputs.run_tflint }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t DIRS < <(git ls-files '*.tf' | xargs -n1 dirname | sort -u | grep -v '\.terraform' || true)
+          if [[ ${#DIRS[@]} -eq 0 ]]; then
+            echo "No Terraform files found. Skipping tflint."
+            exit 0
+          fi
+          for d in "${DIRS[@]}"; do
+            echo "==> tflint $d"
+            (cd "$d" && tflint --init && tflint)
+          done
