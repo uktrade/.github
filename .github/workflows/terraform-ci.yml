@@ -1,5 +1,6 @@
 # .github/workflows/terraform-ci.yml
 name: terraform-ci
+
 on:
   workflow_call:
     inputs:
@@ -32,6 +33,8 @@ jobs:
       contents: read
     env:
       TF_IN_AUTOMATION: "true"
+      TF_PLUGIN_CACHE_DIR: ~/.terraform.d/plugin-cache
+      TF_CI_DEBUG: "false"
 
     steps:
       - name: Checkout
@@ -40,50 +43,90 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: Cache Terraform plugins
+        uses: actions/cache@v4
+        with:
+          path: ~/.terraform.d/plugin-cache
+          key: tf-plugins-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            tf-plugins-${{ runner.os }}-
+
       - name: FMT (repo-wide)
         run: terraform fmt -recursive -check
 
-      - name: Validate (per dir with .tf, skipping examples/tests/.github and broken local module refs)
+      - name: Validate (per dir with .tf, skip examples/tests/.github and broken local module refs)
         shell: bash
         run: |
           set -euo pipefail
+
+          # Build list of candidate dirs
           if [[ -n "${{ inputs.validate_only_roots }}" ]]; then
             mapfile -t DIRS < <(printf "%s\n" "${{ inputs.validate_only_roots }}" | sed '/^\s*$/d')
           else
             mapfile -t DIRS < <(git ls-files '*.tf' | xargs -n1 dirname | sort -u | grep -v '\.terraform' || true)
           fi
+
           if [[ ${#DIRS[@]} -eq 0 ]]; then
             echo "No Terraform files found. Skipping validation."
             exit 0
           fi
+
           has_missing_local_module() {
             local dir="$1" missing=0
+
+            # Optional debug
+            if [[ "${TF_CI_DEBUG:-false}" == "true" ]]; then
+              echo ">> DEBUG: scanning only '$dir' (non-recursive) for local module sources"
+            fi
+
+            # Non-recursive scan: only consider *.tf files directly inside $dir
             while IFS= read -r src; do
-              local path="$dir/$src"
-              [[ -e "$path" ]] || { echo ">> Note: $dir expects local module '$src' (missing)"; missing=1; }
-            done < <(grep -R --include='*.tf' -E 'source *= *"(?:\./|\.\./)[^"]+"' "$dir" 2>/dev/null \
-                     | sed -E 's/.*source *= *"((\.\.?\/)[^"]+)".*/\1/' | sort -u || true)
+              # Only consider *true* local paths that begin with ./ or ../
+              if [[ "$src" =~ ^(\.\/|\.\.\/) ]]; then
+                local path="$dir/$src"
+                if [[ ! -e "$path" ]]; then
+                  echo ">> Note: $dir expects local module '$src' (missing at: $path)"
+                  missing=1
+                fi
+              fi
+            done < <(
+              find "$dir" -maxdepth 1 -type f -name '*.tf' -print0 2>/dev/null \
+                | xargs -0 grep -hE '^[[:space:]]*source[[:space:]]*=[[:space:]]*"([^"]+)"' 2>/dev/null \
+                | sed -E 's/.*source[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/' \
+                | sort -u || true
+            )
+
             return $missing
           }
+
           any_validated=0
           for d in "${DIRS[@]}"; do
+            # Skip noisy locations
             if [[ "$d" =~ (^|/)(examples?|test|tests|\.github)(/|$) ]]; then
-              echo ">> Skipping $d (examples/tests/.github)"; continue
+              echo ">> Skipping $d (examples/tests/.github)"
+              continue
             fi
-            if grep -R --include='*.tf' -E 'source *= *"(./)?modules(/|")' "$d" >/dev/null 2>&1 && [[ ! -d "$d/modules" ]]; then
-              echo ">> Skipping $d (expects ./modules not present)"; continue
-            fi
+
+            # Gate on resolvable local modules only (non-recursive check)
             if has_missing_local_module "$d"; then
-              echo ">> Skipping $d (unresolvable local module paths)"; continue
+              echo ">> Skipping $d (unresolvable local module paths)"
+              continue
             fi
+
             echo "==> terraform validate: $d"
             pushd "$d" >/dev/null
+
+            # Lightweight init: no backend, no interactive input, respect lockfile
             terraform init -backend=false -input=false -lockfile=readonly -no-color || true
+
             terraform validate -no-color || { echo "::error file=$d::terraform validate failed"; exit 1; }
             popd >/dev/null
             any_validated=1
           done
-          [[ "$any_validated" -eq 0 ]] && echo "No eligible Terraform roots to validate (all skipped)."
+
+          if [[ "$any_validated" -eq 0 ]]; then
+            echo "No eligible Terraform roots to validate (all skipped)."
+          fi
 
       - name: Setup TFLint
         if: ${{ inputs.run_tflint }}
