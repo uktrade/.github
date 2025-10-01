@@ -15,16 +15,9 @@ on:
         type: boolean
         default: false
 
-  pull_request: 
-    types:
-      - edited
-      - opened
-      - reopened
-
-    branches:
-      - main
-      - master
-      - dev
+  pull_request:
+    types: [edited, opened, reopened]
+    branches: [main, master, dev]
 
 jobs:
   terraform-ci:
