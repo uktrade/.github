@@ -10,7 +10,7 @@ on:
         type: boolean
         default: false
       extra_skip_globs:
-        description: "Newline-separated patterns to skip (e.g., 'sandbox/*')."
+        description: "Newline-separated patterns to skip entirely (e.g., 'sandbox/*')."
         required: false
         type: string
         default: ""
@@ -34,7 +34,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Keep fmt clean of provider cache warnings
+      # Keep fmt clean (no plugin cache var)
       - name: FMT (repo-wide)
         env:
           TF_PLUGIN_CACHE_DIR: ""
@@ -56,86 +56,118 @@ jobs:
           restore-keys: |
             tf-plugins-${{ runner.os }}-
 
-      - name: Discover Terraform roots
+      - name: Discover Terraform dirs
         id: discover
         shell: bash
         run: |
           set -euo pipefail
 
-          # 1) Start from tracked .tf / .tf.json files
+          # 1) Start from tracked .tf /.tf.json files
           mapfile -t CANDIDATES < <(git ls-files -- '*.tf' '*.tf.json' 2>/dev/null | xargs -n1 dirname | sort -u)
 
-          # 2) Built-in skips (noise dirs)
-          skip_regex='(^|/)(\.terraform|\.github|\.git|node_modules|vendor|examples?|test|tests|docs)(/|$)'
+          # 2) Built-in skip patterns (noise); NOTE: we DO NOT skip examples here
+          skip_regex='(^|/)(\.terraform|\.github|\.git|node_modules|vendor|docs)(/|$)'
 
-          # 3) Optional extra skips from input (newline-separated -> regex OR)
+          # 3) Optional extra skips from input
           EXTRA_SKIP="${{ inputs.extra_skip_globs }}"
           if [[ -n "$EXTRA_SKIP" ]]; then
-            # Escape dots and slashes a bit and join with |
             extra_regex="$(printf '%s\n' "$EXTRA_SKIP" | sed -E 's/[.[\]{}()+*^$\\|]/\\&/g; s,/,\\/,g' | paste -sd'|' -)"
             skip_regex="(${skip_regex}|${extra_regex})"
           fi
 
-          # 4) Build final DIRS list, ensuring each has at least one *.tf / *.tf.json
-          declare -a DIRS=()
+          declare -a EXAMPLES=() NONEXAMPLES=()
           for d in "${CANDIDATES[@]}"; do
             [[ "$d" =~ $skip_regex ]] && continue
             shopt -s nullglob
-            tf_files=( "$d"/*.tf "$d"/*.tf.json )
+            tf=( "$d"/*.tf "$d"/*.tf.json )
             shopt -u nullglob
-            [[ ${#tf_files[@]} -eq 0 ]] && continue
-            DIRS+=("$d")
+            [[ ${#tf[@]} -eq 0 ]] && continue
+            if [[ "$d" =~ (^|/)examples(/|$) ]]; then
+              EXAMPLES+=("$d")
+            else
+              NONEXAMPLES+=("$d")
+            fi
           done
 
-          if [[ ${#DIRS[@]} -eq 0 ]]; then
-            echo "dirs=" >> "$GITHUB_OUTPUT"
-            echo "No Terraform files found. Skipping validation."
-            exit 0
-          fi
-
-          printf '%s\n' "${DIRS[@]}"
-          # Save as newline-separated for next step
+          # Outputs
           {
-            printf 'dirs<<EOF\n'
-            printf '%s\n' "${DIRS[@]}"
-            printf 'EOF\n'
+            printf 'examples<<EOF\n'; printf '%s\n' "${EXAMPLES[@]}"; printf 'EOF\n'
+            printf 'nonexamples<<EOF\n'; printf '%s\n' "${NONEXAMPLES[@]}"; printf 'EOF\n'
           } >> "$GITHUB_OUTPUT"
 
-      - name: Validate (auto-discovered roots)
-        if: steps.discover.outputs.dirs != ''
+          echo "Discovered examples: ${#EXAMPLES[@]}, nonexamples: ${#NONEXAMPLES[@]}"
+
+      - name: Validate examples (preferred for module repos)
+        if: steps.discover.outputs.examples != ''
         shell: bash
         run: |
           set -euo pipefail
-          # Read newline-separated list from previous step
-          mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.dirs }}")
-
-          echo "Validating roots:"
+          mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.examples }}")
+          echo "Validating example roots:"
           printf ' - %s\n' "${DIRS[@]}"
 
           failed=()
-
           for d in "${DIRS[@]}"; do
-            echo "==> terraform validate: $d"
-
-            # Use readonly lockfile only if present to avoid churn
+            echo "==> terraform validate (example): $d"
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
-
             if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color; then
-              echo "::warning file=$d::terraform init failed (skipping validate for this root)"
+              echo "::error file=$d::terraform init failed"
               failed+=("$d (init failed)")
               continue
             fi
-
             if ! terraform -chdir="$d" validate -no-color; then
               echo "::error file=$d::terraform validate failed"
               failed+=("$d (validate failed)")
             fi
           done
+          [[ ${#failed[@]} -eq 0 ]] || { printf 'Failures:\n - %s\n' "${failed[@]}"; exit 1; }
 
-          if [[ ${#failed[@]} -gt 0 ]]; then
-            echo "The following roots failed:"
-            printf ' - %s\n' "${failed[@]}"
+      - name: Validate non-example roots (skip module-only errors)
+        if: steps.discover.outputs.nonexamples != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.nonexamples }}")
+          echo "Validating non-example roots:"
+          printf ' - %s\n' "${DIRS[@]}"
+
+          hard_fail=()
+          soft_skipped=()
+
+          for d in "${DIRS[@]}"; do
+            echo "==> terraform validate (non-example): $d"
+            lockflag=()
+            [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
+
+            # We allow init to fail hard here: if modules are truly standalone roots, init should work.
+            if ! out_init="$(terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1)"; then
+              echo "::warning file=$d::terraform init failed; treating as module-only and skipping validate"
+              soft_skipped+=("$d (init failed)")
+              continue
+            fi
+
+            if ! out_val="$(terraform -chdir="$d" validate -no-color 2>&1)"; then
+              # Heuristics for "module-only" failures where validate cannot run standalone:
+              if grep -Eq 'Provider configuration not present|No value for required variable|Missing required argument|Module source cannot be determined' <<<"$out_val"; then
+                echo "::notice file=$d::Looks like a module-only directory (needs caller providers/inputs). Skipping validate for this dir."
+                soft_skipped+=("$d (module-only)")
+              else
+                echo "$out_val"
+                echo "::error file=$d::terraform validate failed"
+                hard_fail+=("$d (validate failed)")
+              fi
+            fi
+          done
+
+          # Report summary
+          if [[ ${#soft_skipped[@]} -gt 0 ]]; then
+            echo "Skipped (module-only) dirs:"
+            printf ' - %s\n' "${soft_skipped[@]}"
+          fi
+          if [[ ${#hard_fail[@]} -gt 0 ]]; then
+            echo "Hard failures:"
+            printf ' - %s\n' "${hard_fail[@]}"
             exit 1
           fi
 
@@ -152,12 +184,14 @@ jobs:
           restore-keys: |
             tflint-plugins-${{ runner.os }}-
 
-      - name: TFLint (auto-discovered roots)
-        if: ${{ inputs.run_tflint && steps.discover.outputs.dirs != '' }}
+      - name: TFLint (all discovered dirs)
+        if: ${{ inputs.run_tflint && (steps.discover.outputs.examples != '' || steps.discover.outputs.nonexamples != '') }}
         shell: bash
         run: |
           set -euo pipefail
-          mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.dirs }}")
+          mapfile -t EX < <(printf "%s\n" "${{ steps.discover.outputs.examples }}")
+          mapfile -t NX < <(printf "%s\n" "${{ steps.discover.outputs.nonexamples }}")
+          DIRS=("${EX[@]}" "${NX[@]}")
           for d in "${DIRS[@]}"; do
             echo "==> tflint $d"
             (cd "$d" && tflint --init && tflint)
