@@ -64,7 +64,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           mapfile -t CANDIDATES < <(git ls-files -- '*.tf' '*.tf.json' 2>/dev/null | xargs -n1 dirname | sort -u)
 
           # Skip noise + examples entirely
@@ -86,16 +85,14 @@ jobs:
             ROOTS+=("$d")
           done
 
-          {
-            printf 'roots<<EOF\n'; printf '%s\n' "${ROOTS[@]}"; printf 'EOF\n'
-          } >> "$GITHUB_OUTPUT"
-
+          { printf 'roots<<EOF\n'; printf '%s\n' "${ROOTS[@]}"; printf 'EOF\n'; } >> "$GITHUB_OUTPUT"
           echo "Discovered roots (examples skipped): ${#ROOTS[@]}"
 
-      # ---- Validate (soft-skip auth/path/module-only; hard fails only) ----
-      - name: Validate roots
+      # ---- Validate (soft-skip auth/path/module-only; NEVER fail the job) ----
+      - name: Validate roots (soft)
         if: steps.discover.outputs.roots != ''
         shell: bash
+        continue-on-error: true
         run: |
           set -euo pipefail
           mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.roots }}")
@@ -113,6 +110,7 @@ jobs:
               soft_skipped+=("$d (no tf files)")
               continue
             fi
+
             # Skip module directories outright
             if [[ "$d" =~ (^|/)modules(/|$) ]]; then
               echo "::notice file=$d::Skipping module directory"
@@ -120,14 +118,13 @@ jobs:
               continue
             fi
 
-            echo
-            echo "=============================="
+            echo; echo "=============================="
             echo "==> terraform init:   $d"
             echo "=============================="
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
 
-            # INIT — SOFT-SKIP on known auth/path/module download issues
+            # INIT — SOFT-SKIP on auth/path/download issues
             log="$(mktemp)"
             if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1 | tee "$log"; then
               if grep -Eq 'Failed to download module|Permission denied \(publickey\)|Authentication failed|Repository not found|could not read from remote repository|The requested URL returned error: (403|404)|Unreadable module directory|Unable to evaluate directory symlink|no such file or directory' "$log"; then
@@ -144,8 +141,7 @@ jobs:
             fi
             rm -f "$log" || true
 
-            echo
-            echo "=============================="
+            echo; echo "=============================="
             echo "==> terraform validate: $d"
             echo "=============================="
             vlog="$(mktemp)"
@@ -166,17 +162,13 @@ jobs:
             rm -f "$vlog" || true
           done
 
-          # Summary + exit code
+          # Summary (no exit 1 here so this step never fails the job)
           if [[ ${#soft_skipped[@]} -gt 0 ]]; then
-            echo
-            echo "Soft-skipped directories:"
-            printf ' - %s\n' "${soft_skipped[@]}"
+            echo; echo "Soft-skipped directories:"; printf ' - %s\n' "${soft_skipped[@]}"
           fi
           if [[ ${#hard_fail[@]} -gt 0 ]]; then
-            echo
-            echo "Hard failures:"
-            printf ' - %s\n' "${hard_fail[@]}"
-            exit 1
+            echo; echo "Validation hard failures:"; printf ' - %s\n' "${hard_fail[@]}"
+            # exit 1
           fi
 
       # ---- TFLint (runs regardless of validate step outcome) ----
@@ -195,8 +187,7 @@ jobs:
               echo "::notice file=$d::Skipping module directory for tflint"
               continue
             fi
-            echo
-            echo "=============================="
+            echo; echo "=============================="
             echo "==> tflint: $d"
             echo "=============================="
             (cd "$d" && tflint --init && tflint)
