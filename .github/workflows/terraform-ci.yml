@@ -31,11 +31,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-  
       - name: FMT (repo-wide)
         env:
           TF_PLUGIN_CACHE_DIR: ""
