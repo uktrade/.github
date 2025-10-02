@@ -35,12 +35,11 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Keep the provider cache OUT of the fmt step to avoid warnings.
-      # - name: FMT (repo-wide)
-      #   env:
-      #     TF_PLUGIN_CACHE_DIR: ""
-      #   run: terraform fmt -recursive -check
-
+  
+      - name: FMT (repo-wide)
+        env:
+          TF_PLUGIN_CACHE_DIR: ""
+        run: terraform fmt -recursive -check
       # Configure provider cache only for init/validate (optional but fast)
       - name: Prepare Terraform plugin cache
         shell: bash
