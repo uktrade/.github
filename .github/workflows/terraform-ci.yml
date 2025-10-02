@@ -34,7 +34,6 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Keep fmt clean (no plugin cache var)
       - name: FMT (repo-wide)
         env:
           TF_PLUGIN_CACHE_DIR: ""
@@ -89,7 +88,6 @@ jobs:
             fi
           done
 
-          # Outputs
           {
             printf 'examples<<EOF\n'; printf '%s\n' "${EXAMPLES[@]}"; printf 'EOF\n'
             printf 'nonexamples<<EOF\n'; printf '%s\n' "${NONEXAMPLES[@]}"; printf 'EOF\n'
@@ -107,23 +105,56 @@ jobs:
           printf ' - %s\n' "${DIRS[@]}"
 
           failed=()
+          soft_skipped=()
+
           for d in "${DIRS[@]}"; do
-            echo "==> terraform validate (example): $d"
+            echo
+            echo "=============================="
+            echo "==> terraform init:   $d"
+            echo "=============================="
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
-            if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color; then
-              echo "::error file=$d::terraform init failed"
+
+            # Run init and capture output to detect private-module auth errors
+            log="$(mktemp)"
+            set +o pipefail
+            terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1 | tee "$log"
+            ec=${PIPESTATUS[0]}
+            set -o pipefail
+
+            if (( ec != 0 )); then
+              if grep -Eq 'Permission denied \(publickey\)|Authentication failed|Repository not found|could not read from remote repository|The requested URL returned error: (403|404)' "$log"; then
+                echo "::warning file=$d::terraform init failed (likely private module credentials). Skipping validate for this dir."
+                soft_skipped+=("$d (init auth)")
+                rm -f "$log" || true
+                continue
+              fi
+              echo "::error file=$d::terraform init failed (see output above)"
               failed+=("$d (init failed)")
+              rm -f "$log" || true
               continue
             fi
-            if ! terraform -chdir="$d" validate -no-color; then
-              echo "::error file=$d::terraform validate failed"
+            rm -f "$log" || true
+
+            echo
+            echo "=============================="
+            echo "==> terraform validate: $d"
+            echo "=============================="
+            if ! terraform -chdir="$d" validate -no-color 2>&1; then
+              echo "::error file=$d::terraform validate failed (see output above)"
               failed+=("$d (validate failed)")
             fi
           done
-          [[ ${#failed[@]} -eq 0 ]] || { printf 'Failures:\n - %s\n' "${failed[@]}"; exit 1; }
 
-      - name: Validate non-example roots (skip module-only errors)
+          # Summaries
+          if [[ ${#soft_skipped[@]} -gt 0 ]]; then
+            echo
+            echo "Soft-skipped example dirs (private module auth):"
+            printf ' - %s\n' "${soft_skipped[@]}"
+          fi
+          [[ ${#failed[@]} -eq 0 ]] || { echo "Failures:"; printf ' - %s\n' "${failed[@]}"; exit 1; }
+
+      - name: Validate non-example roots (stream stdout/stderr)
         if: steps.discover.outputs.nonexamples != ''
         shell: bash
         run: |
@@ -136,36 +167,68 @@ jobs:
           soft_skipped=()
 
           for d in "${DIRS[@]}"; do
-            echo "==> terraform validate (non-example): $d"
+            # Skip if no .tf files (protects against template-only dirs)
+            if ! find "$d" -maxdepth 1 -type f \( -name "*.tf" -o -name "*.tf.json" \) | grep -q .; then
+              echo "::notice file=$d::Skipping (no Terraform files)"
+              soft_skipped+=("$d (no tf files)")
+              continue
+            fi
+
+            # Skip module directories outright (validated via examples)
+            if [[ "$d" =~ (^|/)modules(/|$) ]]; then
+              echo "::notice file=$d::Skipping module directory (validate examples instead)"
+              soft_skipped+=("$d (module dir)")
+              continue
+            fi
+
+            echo
+            echo "=============================="
+            echo "==> terraform init:   $d"
+            echo "=============================="
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
 
-            # We allow init to fail hard here: if modules are truly standalone roots, init should work.
-            if ! out_init="$(terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1)"; then
-              echo "::warning file=$d::terraform init failed; treating as module-only and skipping validate"
+            if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1; then
+              echo "::warning file=$d::terraform init failed; treating as module-only or misconfigured root; skipping validate for this dir"
               soft_skipped+=("$d (init failed)")
               continue
             fi
 
-            if ! out_val="$(terraform -chdir="$d" validate -no-color 2>&1)"; then
-              # Heuristics for "module-only" failures where validate cannot run standalone:
-              if grep -Eq 'Provider configuration not present|No value for required variable|Missing required argument|Module source cannot be determined' <<<"$out_val"; then
-                echo "::notice file=$d::Looks like a module-only directory (needs caller providers/inputs). Skipping validate for this dir."
+            echo
+            echo "=============================="
+            echo "==> terraform validate: $d"
+            echo "=============================="
+            # Stream output and capture exit code once
+            log="$(mktemp)"
+            set +o pipefail
+            terraform -chdir="$d" validate -no-color 2>&1 | tee "$log"
+            ec=${PIPESTATUS[0]}
+            set -o pipefail
+
+            if (( ec != 0 )); then
+              # Module-only / caller-dependent patterns (provider/vars/args)
+              if grep -Eq \
+                'Provider configuration not present|its original provider configuration at provider\[.*\] is required|has been removed\. This occurs when a provider configuration is removed|No value for required variable|Missing required argument|Module source cannot be determined' \
+                "$log"; then
+                echo "::notice file=$d::Module-only or caller-dependent config; skipping validate for this dir."
                 soft_skipped+=("$d (module-only)")
               else
-                echo "$out_val"
-                echo "::error file=$d::terraform validate failed"
+                echo "::error file=$d::terraform validate failed (see output above)"
                 hard_fail+=("$d (validate failed)")
               fi
             fi
+
+            rm -f "$log" || true
           done
 
           # Report summary
           if [[ ${#soft_skipped[@]} -gt 0 ]]; then
-            echo "Skipped (module-only) dirs:"
+            echo
+            echo "Skipped directories:"
             printf ' - %s\n' "${soft_skipped[@]}"
           fi
           if [[ ${#hard_fail[@]} -gt 0 ]]; then
+            echo
             echo "Hard failures:"
             printf ' - %s\n' "${hard_fail[@]}"
             exit 1
@@ -193,6 +256,9 @@ jobs:
           mapfile -t NX < <(printf "%s\n" "${{ steps.discover.outputs.nonexamples }}")
           DIRS=("${EX[@]}" "${NX[@]}")
           for d in "${DIRS[@]}"; do
-            echo "==> tflint $d"
+            echo
+            echo "=============================="
+            echo "==> tflint: $d"
+            echo "=============================="
             (cd "$d" && tflint --init && tflint)
           done
