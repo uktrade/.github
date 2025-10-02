@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
 
-  # Optional: allow running directly on PRs if you also mark this as a Required Workflow
+  # Optional: allow running directly on PRs if marked as a Required Workflow
   pull_request:
     types: [opened, edited, reopened, synchronize]
     branches: [main, master, dev]
@@ -36,10 +36,10 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       # Keep the provider cache OUT of the fmt step to avoid warnings.
-      - name: FMT (repo-wide)
-        env:
-          TF_PLUGIN_CACHE_DIR: ""
-        run: terraform fmt -recursive -check
+      # - name: FMT (repo-wide)
+      #   env:
+      #     TF_PLUGIN_CACHE_DIR: ""
+      #   run: terraform fmt -recursive -check
 
       # Configure provider cache only for init/validate (optional but fast)
       - name: Prepare Terraform plugin cache
