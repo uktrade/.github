@@ -26,9 +26,6 @@ jobs:
       contents: read
     env:
       TF_IN_AUTOMATION: "true"
-      # Deterministic cache paths for expressions:
-      TF_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
-      TFLINT_CACHE_DIR: ${{ github.workspace }}/.tflint.d/plugins
 
     steps:
       - name: Checkout
@@ -38,48 +35,42 @@ jobs:
         id: setup-tf
         uses: hashicorp/setup-terraform@v3
 
-      # fmt is local-only; keep it clean (no provider cache)
+      # fmt is local-only
       - name: FMT (repo-wide)
         env:
-          TF_PLUGIN_CACHE_DIR: ""   # ensure fmt doesn't rely on cache var
+          TF_PLUGIN_CACHE_DIR: ""
         run: terraform fmt -recursive -check
 
-      # --- Terraform provider cache (used by init/validate) ---
+      # ---- Minimal provider cache (used by init/validate) ----
       - name: Prepare Terraform provider cache dir
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "${TF_CACHE_DIR}"
-          # Make Terraform use this cache path
-          echo "TF_PLUGIN_CACHE_DIR=${TF_CACHE_DIR}" >> "$GITHUB_ENV"
+          mkdir -p "${{ github.workspace }}/.terraform.d/plugin-cache"
+          echo "TF_PLUGIN_CACHE_DIR=${{ github.workspace }}/.terraform.d/plugin-cache" >> "$GITHUB_ENV"
 
       - name: Cache Terraform provider plugins
         uses: actions/cache@v4
         with:
-          path: ${{ env.TF_CACHE_DIR }}
+          path: ${{ github.workspace }}/.terraform.d/plugin-cache
           key: tf-plugins-${{ runner.os }}-tf${{ steps.setup-tf.outputs.terraform_version }}-${{ hashFiles('**/.terraform.lock.hcl') }}
           restore-keys: |
             tf-plugins-${{ runner.os }}-tf${{ steps.setup-tf.outputs.terraform_version }}-
             tf-plugins-${{ runner.os }}-
 
-      # --- Discover roots (skip examples entirely) ---
+      # ---- Discover roots (skip examples entirely) ----
       - name: Discover Terraform dirs (skip examples)
         id: discover
         shell: bash
         run: |
           set -euo pipefail
-
           mapfile -t CANDIDATES < <(git ls-files -- '*.tf' '*.tf.json' 2>/dev/null | xargs -n1 dirname | sort -u)
-
-          # Skip noise + examples entirely
           skip_regex='(^|/)(\.terraform|\.github|\.git|node_modules|vendor|docs|examples)(/|$)'
-
           EXTRA_SKIP="${{ inputs.extra_skip_globs }}"
           if [[ -n "$EXTRA_SKIP" ]]; then
             extra_regex="$(printf '%s\n' "$EXTRA_SKIP" | sed -E 's/[.[\]{}()+*^$\\|]/\\&/g; s,/,\\/,g' | paste -sd'|' -)"
             skip_regex="(${skip_regex}|${extra_regex})"
           fi
-
           declare -a ROOTS=()
           for d in "${CANDIDATES[@]}"; do
             [[ "$d" =~ $skip_regex ]] && continue
@@ -89,14 +80,10 @@ jobs:
             [[ ${#tf[@]} -eq 0 ]] && continue
             ROOTS+=("$d")
           done
-
-          {
-            printf 'roots<<EOF\n'; printf '%s\n' "${ROOTS[@]}"; printf 'EOF\n'
-          } >> "$GITHUB_OUTPUT"
-
+          { printf 'roots<<EOF\n'; printf '%s\n' "${ROOTS[@]}"; printf 'EOF\n'; } >> "$GITHUB_OUTPUT"
           echo "Discovered roots (examples skipped): ${#ROOTS[@]}"
 
-      # --- Validate (with soft-skips) ---
+      # ---- Validate (soft-skip auth/path/module-only, skip modules/) ----
       - name: Validate roots
         if: steps.discover.outputs.roots != ''
         shell: bash
@@ -110,28 +97,25 @@ jobs:
           soft_skipped=()
 
           for d in "${DIRS[@]}"; do
-            # Skip if no .tf files (template-only dirs)
+            # Skip empty/template-only dirs
             if ! find "$d" -maxdepth 1 -type f \( -name "*.tf" -o -name "*.tf.json" \) | grep -q .; then
               echo "::notice file=$d::Skipping (no Terraform files)"
               soft_skipped+=("$d (no tf files)")
               continue
             fi
-
-            # Skip module directories outright (validate via their callers/examples elsewhere)
+            # Skip module directories outright
             if [[ "$d" =~ (^|/)modules(/|$) ]]; then
               echo "::notice file=$d::Skipping module directory"
               soft_skipped+=("$d (module dir)")
               continue
             fi
 
-            echo
-            echo "=============================="
+            echo; echo "=============================="
             echo "==> terraform init:   $d"
             echo "=============================="
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
 
-            # Capture output to detect auth/path errors
             log="$(mktemp)"
             set +o pipefail
             terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1 | tee "$log"
@@ -139,10 +123,7 @@ jobs:
             set -o pipefail
 
             if (( ec != 0 )); then
-              # Soft-skip on private module auth or unreadable local module dir
-              if grep -Eq \
-                'Permission denied \(publickey\)|Authentication failed|Repository not found|could not read from remote repository|The requested URL returned error: (403|404)|Unreadable module directory|Unable to evaluate directory symlink|no such file or directory' \
-                "$log"; then
+              if grep -Eq 'Permission denied \(publickey\)|Authentication failed|Repository not found|could not read from remote repository|The requested URL returned error: (403|404)|Unreadable module directory|Unable to evaluate directory symlink|no such file or directory' "$log"; then
                 echo "::warning file=$d::terraform init failed (private module auth or bad local module path). Skipping validate for this dir."
                 soft_skipped+=("$d (init auth/path)")
                 rm -f "$log" || true
@@ -155,8 +136,7 @@ jobs:
             fi
             rm -f "$log" || true
 
-            echo
-            echo "=============================="
+            echo; echo "=============================="
             echo "==> terraform validate: $d"
             echo "=============================="
             vlog="$(mktemp)"
@@ -166,10 +146,7 @@ jobs:
             set -o pipefail
 
             if (( ec != 0 )); then
-              # Soft-skip common module-only / caller-dependent patterns
-              if grep -Eq \
-                'Provider configuration not present|its original provider configuration at provider\[.*\] is required|has been removed\. This occurs when a provider configuration is removed|No value for required variable|Missing required argument|Module source cannot be determined' \
-                "$vlog"; then
+              if grep -Eq 'Provider configuration not present|its original provider configuration at provider\[.*\] is required|has been removed\. This occurs when a provider configuration is removed|No value for required variable|Missing required argument|Module source cannot be determined' "$vlog"; then
                 echo "::notice file=$d::Module-only or caller-dependent config; skipping validate for this dir."
                 soft_skipped+=("$d (module-only)")
               else
@@ -181,36 +158,14 @@ jobs:
             rm -f "$vlog" || true
           done
 
-          # Summary
           if [[ ${#soft_skipped[@]} -gt 0 ]]; then
-            echo
-            echo "Skipped directories:"
-            printf ' - %s\n' "${soft_skipped[@]}"
+            echo; echo "Skipped directories:"; printf ' - %s\n' "${soft_skipped[@]}"
           fi
           if [[ ${#hard_fail[@]} -gt 0 ]]; then
-            echo
-            echo "Hard failures:"
-            printf ' - %s\n' "${hard_fail[@]}"
-            exit 1
+            echo; echo "Hard failures:"; printf ' - %s\n' "${hard_fail[@]}"; exit 1
           fi
 
-      # --- TFLint with cache (optional) ---
-      - name: Prepare TFLint plugin cache dir
-        if: ${{ inputs.run_tflint }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "${TFLINT_CACHE_DIR}"
-
-      - name: Cache TFLint plugins
-        if: ${{ inputs.run_tflint }}
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.TFLINT_CACHE_DIR }}
-          key: tflint-plugins-${{ runner.os }}-${{ hashFiles('**/.tflint.hcl') }}
-          restore-keys: |
-            tflint-plugins-${{ runner.os }}-
-
+      # ---- Optional TFLint (no cache) ----
       - name: Setup TFLint
         if: ${{ inputs.run_tflint }}
         uses: terraform-linters/setup-tflint@v4
@@ -226,10 +181,8 @@ jobs:
               echo "::notice file=$d::Skipping module directory for tflint"
               continue
             fi
-            echo
-            echo "=============================="
+            echo; echo "=============================="
             echo "==> tflint: $d"
             echo "=============================="
-            # Tell tflint to use the cached plugin dir
-            (cd "$d" && TFLINT_PLUGIN_DIR="${TFLINT_CACHE_DIR}" tflint --init && TFLINT_PLUGIN_DIR="${TFLINT_CACHE_DIR}" tflint)
+            (cd "$d" && tflint --init && tflint)
           done
