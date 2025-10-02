@@ -105,6 +105,8 @@ jobs:
           printf ' - %s\n' "${DIRS[@]}"
 
           failed=()
+          soft_skipped=()
+
           for d in "${DIRS[@]}"; do
             echo
             echo "=============================="
@@ -112,11 +114,27 @@ jobs:
             echo "=============================="
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
-            if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1; then
+
+            # Run init and capture output to detect private-module auth errors
+            log="$(mktemp)"
+            set +o pipefail
+            terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1 | tee "$log"
+            ec=${PIPESTATUS[0]}
+            set -o pipefail
+
+            if (( ec != 0 )); then
+              if grep -Eq 'Permission denied \(publickey\)|Authentication failed|Repository not found|could not read from remote repository|The requested URL returned error: (403|404)' "$log"; then
+                echo "::warning file=$d::terraform init failed (likely private module credentials). Skipping validate for this dir."
+                soft_skipped+=("$d (init auth)")
+                rm -f "$log" || true
+                continue
+              fi
               echo "::error file=$d::terraform init failed (see output above)"
               failed+=("$d (init failed)")
+              rm -f "$log" || true
               continue
             fi
+            rm -f "$log" || true
 
             echo
             echo "=============================="
@@ -128,6 +146,12 @@ jobs:
             fi
           done
 
+          # Summaries
+          if [[ ${#soft_skipped[@]} -gt 0 ]]; then
+            echo
+            echo "Soft-skipped example dirs (private module auth):"
+            printf ' - %s\n' "${soft_skipped[@]}"
+          fi
           [[ ${#failed[@]} -eq 0 ]] || { echo "Failures:"; printf ' - %s\n' "${failed[@]}"; exit 1; }
 
       - name: Validate non-example roots (stream stdout/stderr)
@@ -150,13 +174,12 @@ jobs:
               continue
             fi
 
-            # === NEW: skip module directories outright (validated via examples) ===
+            # Skip module directories outright (validated via examples)
             if [[ "$d" =~ (^|/)modules(/|$) ]]; then
               echo "::notice file=$d::Skipping module directory (validate examples instead)"
               soft_skipped+=("$d (module dir)")
               continue
             fi
-            # =====================================================================
 
             echo
             echo "=============================="
