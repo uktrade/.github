@@ -69,13 +69,21 @@ jobs:
             DIRS=(.)
           fi
 
-          echo "Validating roots:"
-          printf ' - %s\n' "${DIRS[@]}"
-
           for d in "${DIRS[@]}"; do
             echo "==> terraform validate: $d"
-            terraform -chdir="$d" init -backend=false -input=false -lockfile=readonly -no-color
-            terraform -chdir="$d" validate -no-color
+
+            # Only enforce readonly lockfile if it exists
+            lockflag=()
+            [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
+
+            terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color
+
+            # Capture output
+            if ! out="$(terraform -chdir="$d" validate -no-color 2>&1)"; then
+              printf '%s\n' "$out"
+              echo "::error file=$d::terraform validate failed"
+              exit 1
+            fi
           done
 
       - name: Setup TFLint
