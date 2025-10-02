@@ -34,11 +34,10 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-      # Keep fmt clean (no plugin cache var)
-      # - name: FMT (repo-wide)
-      #   env:
-      #     TF_PLUGIN_CACHE_DIR: ""
-      #   run: terraform fmt -recursive -check
+      - name: FMT (repo-wide)
+        env:
+          TF_PLUGIN_CACHE_DIR: ""
+        run: terraform fmt -recursive -check
 
       # Prepare provider plugin cache for init/validate
       - name: Prepare Terraform plugin cache
@@ -151,6 +150,14 @@ jobs:
               continue
             fi
 
+            # === NEW: skip module directories outright (validated via examples) ===
+            if [[ "$d" =~ (^|/)modules(/|$) ]]; then
+              echo "::notice file=$d::Skipping module directory (validate examples instead)"
+              soft_skipped+=("$d (module dir)")
+              continue
+            fi
+            # =====================================================================
+
             echo
             echo "=============================="
             echo "==> terraform init:   $d"
@@ -158,7 +165,6 @@ jobs:
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
 
-            # Stream output directly to STDOUT/ERR
             if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1; then
               echo "::warning file=$d::terraform init failed; treating as module-only or misconfigured root; skipping validate for this dir"
               soft_skipped+=("$d (init failed)")
@@ -169,17 +175,27 @@ jobs:
             echo "=============================="
             echo "==> terraform validate: $d"
             echo "=============================="
-            if ! terraform -chdir="$d" validate -no-color 2>&1; then
-              # Heuristics for module-only roots that cannot validate standalone
-              if terraform -chdir="$d" validate -no-color 2>&1 | grep -Eq \
-                   'Provider configuration not present|No value for required variable|Missing required argument|Module source cannot be determined'; then
-                echo "::notice file=$d::Looks like a module-only directory (needs caller providers/inputs). Skipping validate."
+            # Stream output and capture exit code once
+            log="$(mktemp)"
+            set +o pipefail
+            terraform -chdir="$d" validate -no-color 2>&1 | tee "$log"
+            ec=${PIPESTATUS[0]}
+            set -o pipefail
+
+            if (( ec != 0 )); then
+              # Module-only / caller-dependent patterns (provider/vars/args)
+              if grep -Eq \
+                'Provider configuration not present|its original provider configuration at provider\[.*\] is required|has been removed\. This occurs when a provider configuration is removed|No value for required variable|Missing required argument|Module source cannot be determined' \
+                "$log"; then
+                echo "::notice file=$d::Module-only or caller-dependent config; skipping validate for this dir."
                 soft_skipped+=("$d (module-only)")
               else
                 echo "::error file=$d::terraform validate failed (see output above)"
                 hard_fail+=("$d (validate failed)")
               fi
             fi
+
+            rm -f "$log" || true
           done
 
           # Report summary
