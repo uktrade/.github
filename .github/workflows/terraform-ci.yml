@@ -36,10 +36,10 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       # fmt is local-only
-      # - name: FMT (repo-wide)
-      #   env:
-      #     TF_PLUGIN_CACHE_DIR: ""
-      #   run: terraform fmt -recursive -check
+      - name: FMT (repo-wide)
+        env:
+          TF_PLUGIN_CACHE_DIR: ""
+        run: terraform fmt -recursive -check
 
       # Provider cache (speeds up init/validate)
       - name: Prepare Terraform provider cache dir
