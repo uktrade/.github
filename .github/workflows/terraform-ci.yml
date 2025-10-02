@@ -4,11 +4,6 @@ name: terraform-ci
 on:
   workflow_call:
     inputs:
-      run_tflint:
-        description: "Run TFLint after fmt/validate."
-        required: false
-        type: boolean
-        default: false
       extra_skip_globs:
         description: "Newline-separated patterns to skip entirely (e.g., 'sandbox/*')."
         required: false
@@ -235,11 +230,9 @@ jobs:
           fi
 
       - name: Setup TFLint
-        if: ${{ inputs.run_tflint }}
         uses: terraform-linters/setup-tflint@v4
 
       - name: Cache TFLint plugins
-        if: ${{ inputs.run_tflint }}
         uses: actions/cache@v4
         with:
           path: ~/.tflint.d/plugins
@@ -248,7 +241,7 @@ jobs:
             tflint-plugins-${{ runner.os }}-
 
       - name: TFLint (all discovered dirs)
-        if: ${{ inputs.run_tflint && (steps.discover.outputs.examples != '' || steps.discover.outputs.nonexamples != '') }}
+        if: steps.discover.outputs.nonexamples != ''
         shell: bash
         run: |
           set -euo pipefail
