@@ -41,7 +41,7 @@ jobs:
           TF_PLUGIN_CACHE_DIR: ""
         run: terraform fmt -recursive -check
 
-      # Provider cache (speeds up init/validate)
+      # ---- Provider cache (used by init/validate) ----
       - name: Prepare Terraform provider cache dir
         shell: bash
         run: |
@@ -58,15 +58,16 @@ jobs:
             tf-plugins-${{ runner.os }}-tf${{ steps.setup-tf.outputs.terraform_version }}-
             tf-plugins-${{ runner.os }}-
 
-      # Discover roots (skip examples entirely)
+      # ---- Discover roots (skip examples entirely) ----
       - name: Discover Terraform dirs (skip examples)
         id: discover
         shell: bash
         run: |
           set -euo pipefail
+
           mapfile -t CANDIDATES < <(git ls-files -- '*.tf' '*.tf.json' 2>/dev/null | xargs -n1 dirname | sort -u)
 
-          # Skip noise + examples
+          # Skip noise + examples entirely
           skip_regex='(^|/)(\.terraform|\.github|\.git|node_modules|vendor|docs|examples)(/|$)'
 
           EXTRA_SKIP="${{ inputs.extra_skip_globs }}"
@@ -88,17 +89,16 @@ jobs:
           {
             printf 'roots<<EOF\n'; printf '%s\n' "${ROOTS[@]}"; printf 'EOF\n'
           } >> "$GITHUB_OUTPUT"
+
           echo "Discovered roots (examples skipped): ${#ROOTS[@]}"
 
-      # VALIDATE: non-blocking for the job; still fails the step if hard failures
-      - name: Validate roots (non-blocking step)
-        id: validate
-        continue-on-error: true
+      # ---- Validate (soft-skip auth/path/module-only; hard fails only) ----
+      - name: Validate roots
+        if: steps.discover.outputs.roots != ''
         shell: bash
         run: |
           set -euo pipefail
           mapfile -t DIRS < <(printf "%s\n" "${{ steps.discover.outputs.roots }}")
-          [[ ${#DIRS[@]} -gt 0 ]] || { echo "No roots."; exit 0; }
 
           echo "Validating roots:"
           printf ' - %s\n' "${DIRS[@]}"
@@ -120,36 +120,32 @@ jobs:
               continue
             fi
 
-            echo; echo "=============================="
+            echo
+            echo "=============================="
             echo "==> terraform init:   $d"
             echo "=============================="
             lockflag=()
             [[ -f "$d/.terraform.lock.hcl" ]] && lockflag=(-lockfile=readonly)
 
-            # Run init; SOFT-SKIP on known auth/path errors via your grep
+            # INIT — SOFT-SKIP on known auth/path/module download issues
             log="$(mktemp)"
-            set +o pipefail
-            terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1 | tee "$log"
-            ec=${PIPESTATUS[0]}
-            set -o pipefail
-
-            if (( ec != 0 )); then
-              if grep -Eq \
-                'Failed to download module|Permission denied \(publickey\)|Authentication failed|Repository not found|could not read from remote repository|The requested URL returned error: (403|404)|Unreadable module directory|Unable to evaluate directory symlink|no such file or directory' \
-                "$log"; then
+            if ! terraform -chdir="$d" init -backend=false -input=false "${lockflag[@]}" -no-color 2>&1 | tee "$log"; then
+              if grep -Eq 'Failed to download module|Permission denied \(publickey\)|Authentication failed|Repository not found|could not read from remote repository|The requested URL returned error: (403|404)|Unreadable module directory|Unable to evaluate directory symlink|no such file or directory' "$log"; then
                 echo "::warning file=$d::terraform init failed (private module auth or bad local module path). Skipping validate for this dir."
                 soft_skipped+=("$d (init auth/path)")
                 rm -f "$log" || true
                 continue
+              else
+                echo "::error file=$d::terraform init failed (see output above)"
+                hard_fail+=("$d (init failed)")
+                rm -f "$log" || true
+                continue
               fi
-              echo "::error file=$d::terraform init failed (see output above)"
-              hard_fail+=("$d (init failed)")
-              rm -f "$log" || true
-              continue
             fi
             rm -f "$log" || true
 
-            echo; echo "=============================="
+            echo
+            echo "=============================="
             echo "==> terraform validate: $d"
             echo "=============================="
             vlog="$(mktemp)"
@@ -159,9 +155,7 @@ jobs:
             set -o pipefail
 
             if (( ec != 0 )); then
-              if grep -Eq \
-                'Provider configuration not present|its original provider configuration at provider\[.*\] is required|has been removed\. This occurs when a provider configuration is removed|No value for required variable|Missing required argument|Module source cannot be determined' \
-                "$vlog"; then
+              if grep -Eq 'Provider configuration not present|its original provider configuration at provider\[.*\] is required|has been removed\. This occurs when a provider configuration is removed|No value for required variable|Missing required argument|Module source cannot be determined' "$vlog"; then
                 echo "::notice file=$d::Module-only or caller-dependent; skipping validate for this dir."
                 soft_skipped+=("$d (module-only)")
               else
@@ -172,22 +166,26 @@ jobs:
             rm -f "$vlog" || true
           done
 
-          # Summaries
+          # Summary + exit code
           if [[ ${#soft_skipped[@]} -gt 0 ]]; then
-            echo; echo "Soft-skipped directories:"; printf ' - %s\n' "${soft_skipped[@]}"
+            echo
+            echo "Soft-skipped directories:"
+            printf ' - %s\n' "${soft_skipped[@]}"
           fi
           if [[ ${#hard_fail[@]} -gt 0 ]]; then
-            echo; echo "Validation hard failures:"; printf ' - %s\n' "${hard_fail[@]}"
-            exit 1   # Step fails, but job continues due to continue-on-error:true
+            echo
+            echo "Hard failures:"
+            printf ' - %s\n' "${hard_fail[@]}"
+            exit 1
           fi
 
-      # TFLint runs regardless of validate result (respect the flag)
+      # ---- TFLint (runs regardless of validate step outcome) ----
       - name: Setup TFLint
-        if: ${{ inputs.run_tflint && steps.discover.outputs.roots != '' }}
+        if: ${{ always() && inputs.run_tflint && steps.discover.outputs.roots != '' }}
         uses: terraform-linters/setup-tflint@v4
 
       - name: TFLint (all discovered roots)
-        if: ${{ inputs.run_tflint && steps.discover.outputs.roots != '' }}
+        if: ${{ always() && inputs.run_tflint && steps.discover.outputs.roots != '' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -197,7 +195,8 @@ jobs:
               echo "::notice file=$d::Skipping module directory for tflint"
               continue
             fi
-            echo; echo "=============================="
+            echo
+            echo "=============================="
             echo "==> tflint: $d"
             echo "=============================="
             (cd "$d" && tflint --init && tflint)
