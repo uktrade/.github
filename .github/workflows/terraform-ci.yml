@@ -8,7 +8,7 @@ on:
         description: "Run TFLint after fmt/validate."
         required: false
         type: boolean
-        default: true
+        default: true    # default when called as reusable workflow
       extra_skip_globs:
         description: "Newline-separated patterns to skip entirely (e.g., 'sandbox/*')."
         required: false
@@ -162,22 +162,22 @@ jobs:
             rm -f "$vlog" || true
           done
 
-          # Summary (no exit 1 here so this step never fails the job)
+          # Summary (no exit 1 — this step never fails the job)
           if [[ ${#soft_skipped[@]} -gt 0 ]]; then
             echo; echo "Soft-skipped directories:"; printf ' - %s\n' "${soft_skipped[@]}"
           fi
           if [[ ${#hard_fail[@]} -gt 0 ]]; then
-            echo; echo "Validation hard failures:"; printf ' - %s\n' "${hard_fail[@]}"
-            # exit 1
+            echo; echo "Validation hard failures (non-blocking):"; printf ' - %s\n' "${hard_fail[@]}"
+            # To make hard validation failures fail the job, add: exit 1
           fi
 
-      # ---- TFLint (runs regardless of validate step outcome) ----
+      # ---- TFLint (runs under rulesets because it doesn't rely only on inputs) ----
       - name: Setup TFLint
-        if: ${{ always() && inputs.run_tflint && steps.discover.outputs.roots != '' }}
+        if: ${{ always() && steps.discover.outputs.roots != '' && (inputs.run_tflint || vars.RUN_TFLINT == 'true' || hashFiles('**/.tflint.hcl') != '') }}
         uses: terraform-linters/setup-tflint@v4
 
       - name: TFLint (all discovered roots)
-        if: ${{ always() && inputs.run_tflint && steps.discover.outputs.roots != '' }}
+        if: ${{ always() && steps.discover.outputs.roots != '' && (inputs.run_tflint || vars.RUN_TFLINT == 'true' || hashFiles('**/.tflint.hcl') != '') }}
         shell: bash
         run: |
           set -euo pipefail
@@ -190,5 +190,5 @@ jobs:
             echo; echo "=============================="
             echo "==> tflint: $d"
             echo "=============================="
-            (cd "$d" && tflint --init && tflint)
+            (cd "$d" && { [[ -f .tflint.hcl ]] && tflint --init || true; } && tflint)
           done
