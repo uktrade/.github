@@ -88,7 +88,6 @@ jobs:
           { printf 'roots<<EOF\n'; printf '%s\n' "${ROOTS[@]}"; printf 'EOF\n'; } >> "$GITHUB_OUTPUT"
           echo "Discovered roots (examples skipped): ${#ROOTS[@]}"
 
-      # ---- Validate (soft-skip auth/path/module-only; NEVER fail the job) ----
       - name: Validate roots (soft)
         if: steps.discover.outputs.roots != ''
         shell: bash
@@ -171,7 +170,7 @@ jobs:
             # To make hard validation failures fail the job, add: exit 1
           fi
 
-      # ---- TFLint (runs under rulesets because it doesn't rely only on inputs) ----
+      # ---- TFLint -----
       - name: Setup TFLint
         if: ${{ always() && steps.discover.outputs.roots != '' && (inputs.run_tflint || vars.RUN_TFLINT == 'true' || hashFiles('**/.tflint.hcl') != '') }}
         uses: terraform-linters/setup-tflint@v4
