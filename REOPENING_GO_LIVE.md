@@ -10,7 +10,18 @@ Instructions have been added to the [dbt hooks repository](https://github.com/uk
 
 A set of github tags have been created at an organisation level, these must be applied to a repository to allow organisation level github actions to run on each pull request.
 
+## Apply the correct github security policy
+
+A new organisation github policy has been created that will enforce a set of security checks we expect a repository in the uktrade account to have. This policy is enabled by default for any new repositories, however existing repositories need to have it applied to them before they can be made public. To add this new policy, follow these instructions:
+
+1. As an organisation administrator, navigate to the [security config page](https://github.com/organizations/uktrade/settings/security_products).
+1. Scroll down to the **Apply configurations** sections, and enter the name of the repository to be made public in the filter input field
+1. Use the checkbox next to the results list to select all repositories being made public, then use the **Apply configuration** button to select the **Default DBT security** configuration
+1. A confirmation modal will appear displaying a summary of the action being made. Click the apply button
+1. In the repository that has had the new policy applied, nvaigate to the **Advanced Security** page in the repository settings. At the top of the page there should be a banner message **Modifications to some settings have been blocked by organization administrators.**
+
 ## Checklist
 
 - [ ] `pre-commit` installation instructions followed
 - [ ] Organisation tags added
+- [ ] DBT security policy applied
