@@ -6,9 +6,18 @@ As part of the go live process, each engineer making changes to the repository b
 
 Instructions have been added to the [dbt hooks repository](https://github.com/uktrade/dbt-hooks/blob/main/docs/Installation.md) to provide guidance on adding these organisation wide pre-commit hooks to an individual repository
 
-## Setup tagging on repo
+## Setup custom properties on the repository
 
 A set of github tags have been created at an organisation level, these must be applied to a repository to allow organisation level github actions to run on each pull request.
+
+### Mandatory custom properties
+
+- `reusable_workflow_opt_in`: This one has to be applied and set to `true` to allow this repository to apply the correct organisation branch protection ruleset and run the necessary github workflows on each PR
+
+### Optional custom properties
+
+- `is_docker`: If this repository builds a docker image, this tag should be added to run docker related github workflows
+- `language`: All languages used by this repository should be selected, and github workflows will run with dedicated checks on that language.
 
 ## Apply the correct github security policy
 
@@ -23,5 +32,6 @@ A new organisation github policy has been created that will enforce a set of sec
 ## Checklist
 
 - [ ] `pre-commit` installation instructions followed
-- [ ] Organisation tags added
+- [ ] Organisation custom properties added
 - [ ] DBT security policy applied
+- [ ] Organisation rulesets are applied, this can be verified in the /settings/rules page
