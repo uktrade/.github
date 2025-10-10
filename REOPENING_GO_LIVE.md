@@ -34,4 +34,4 @@ To add the new security policy, follow these instructions:
 - [ ] `pre-commit` installation instructions followed
 - [ ] Organisation custom properties added
 - [ ] DBT security policy applied
-- [ ] Organisation rulesets are applied, this can be verified in the /settings/rules page
+- [ ] Organisation rulesets are applied. This should happen automatically once the custom properties are added, but it can be verified in the /settings/rules page

@@ -20,7 +20,7 @@ Vulnerability reporting guidelines
 
 The DBT Cyber Team will attempt to make contact with the affected owner. However, the affected owner holds responsibility for resolving the issue.
 
-## Security policy
+## Repository security
 
 A new organisation github policy has been created that will enforce a set of security checks we expect a repository in the uktrade account to have. This policy is enabled by default for any new repositories, however existing repositories need to have it applied to them before they can be made public. The expectation is that once enough repositories have been switched from the legacy security policy to the new security policy, this new security policy is enforced across all repositories within the uktrade account
 
@@ -28,13 +28,17 @@ A new organisation github policy has been created that will enforce a set of sec
 
 The uktrade account makes use of custom github properties to enforce branch protection rules and run organisation level github actions. New properties can be added by logging into github using a uktrade account and using the [custom props page](https://github.com/organizations/uktrade/settings/custom-properties)
 
+### Code scanning
+
+All uktrade repositories with the new security policied applied have CodeQL scanning enabled. Individual repositories can apply their own advanced scanning rules if required
+
 ### Push protection
 
 To block known secrets being commited into github, all repositories with the new security policied applied will have push protection enabled and enforced.
 
 ### Branch protection
 
-An organisation ruleset has been created to apply a minimum set of branch protection rules to each public repository in the uktrade account. These rules are to be seen as the minimum, and repository admins might decide to add additional rules to their own repositories. Organisation admins and repository admins have been added to the bypass list for this branch protection ruleset The protection rules that will be applied to each repository are:
+An organisation ruleset has been created to apply a minimum set of branch protection rules to each public repository in the uktrade account. These rules are to be seen as the minimum, and repository admins might decide to add additional rules to their own repositories. Organisation admins and repository admins have been added to the bypass list for this branch protection ruleset. The protection rules that will be applied to each repository are:
 
 - A PR is required for merges into the default branch (usually main)
 - At least 1 approver is required before a PR can be merged
