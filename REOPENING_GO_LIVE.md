@@ -21,7 +21,7 @@ A set of github tags have been created at an organisation level, these must be a
 
 ## Apply the correct github security policy
 
-A new organisation github policy has been created that will enforce a set of security checks we expect a repository in the uktrade account to have. This policy is enabled by default for any new repositories, however existing repositories need to have it applied to them before they can be made public. To add this new policy, follow these instructions:
+To add the new security policy, follow these instructions:
 
 1. As an organisation administrator, navigate to the [security config page](https://github.com/organizations/uktrade/settings/security_products).
 1. Scroll down to the **Apply configurations** sections, and enter the name of the repository to be made public in the filter input field
