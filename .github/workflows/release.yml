@@ -1,0 +1,98 @@
+name: Release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (e.g., 1.2.3)"
+        required: true
+        type: string
+
+env:
+  REGISTRY: dbt-hooks
+
+jobs:
+  verify-release-inputs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Validate we're on main branch
+        run: |
+          current_branch=$(git branch --show-current)
+          if [ "$current_branch" != "main" ]; then
+            echo "Error: Must be on main branch"
+            exit 1
+          fi
+
+      - name: Process version and tag
+        id: version
+        run: |
+          input_version="${{ github.event.inputs.version }}"
+          clean_version=${input_version#v}
+
+          # Validate version format
+          if ! echo "$clean_version" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: Version must be in format x.x.x (with or without v prefix)"
+            exit 1
+          fi
+
+          git_tag="v$clean_version"
+
+          # Check if tag already exists
+          if git rev-parse "$git_tag" >/dev/null 2>&1; then
+            echo "Error: Tag $git_tag already exists"
+            exit 1
+          fi
+
+          echo "version=$clean_version" >> $GITHUB_OUTPUT
+          echo "tag=$git_tag" >> $GITHUB_OUTPUT
+          echo "Clean version: $clean_version"
+          echo "Git tag: $git_tag"
+
+  # This is a workaround to allow us to pass variables to the push-to-ecr reusable workflow. As that workflow runs in
+  # a separate github runner, the env vars in this file are not available
+  setup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      REGISTRY: ${{ env.REGISTRY }}
+    steps:
+      - run: echo "All set!"
+
+  build-and-push-latest-image:
+    needs: [verify-release-inputs, setup]
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/build-and-push-to-ecr.yml
+    with:
+      ecr_repo: ${{ needs.setup.outputs.REGISTRY }}
+      image_tag: latest,${{ needs.verify-release-inputs.outputs.tag }}
+    secrets: inherit
+
+  create-github-release:
+    needs: [verify-release-inputs, build-and-push-latest-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create tag and GitHub release
+        uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b
+        with:
+          tag: ${{ needs.verify-release-inputs.outputs.tag }}
+          name: ${{ needs.verify-release-inputs.outputs.tag }}
+          generateReleaseNotes: true
+          makeLatest: true
