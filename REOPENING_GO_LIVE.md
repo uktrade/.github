@@ -4,7 +4,7 @@ Several uktrade repositories already make use of the pre-commit framework for fl
 
 As part of the go live process, each engineer making changes to the repository being reopened will be required to install the organisation wide pre-commit hooks locally. When a PR is opened, an organisation level github action will run to confirm the pre-commit hooks ran on the engineers machine and will block any PRs that have not run these hooks.
 
-Instructions have been added to the [dbt hooks repository](https://github.com/uktrade/dbt-hooks/blob/main/docs/Installation.md) to provide guidance on adding these organisation wide pre-commit hooks to an individual repository
+Instructions have been added to the [dbt hooks repository](https://github.com/uktrade/github-standards/blob/main/README.md#usage) to provide guidance on adding these organisation wide pre-commit hooks to an individual repository
 
 ## Setup custom properties on the repository
 
@@ -35,3 +35,4 @@ To add the new security policy, follow these instructions:
 - [ ] Organisation custom properties added
 - [ ] DBT security policy applied
 - [ ] Organisation rulesets are applied. This should happen automatically once the custom properties are added, but it can be verified in the /settings/rules page
+- [ ] A CODEOWNERS file has been created at the root of the repo

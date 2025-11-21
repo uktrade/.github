@@ -1,3 +1,1 @@
-# Repository templates
-
-Organization-wide repository templates are configured in this repo. (See our [pull request template](.github/pull_request_template.md) for an example).
+This repo requires pre-commit hooks installed. See the [instructions](https://github.com/uktrade/github-standards/blob/main/README.md#usage) for information of how to install these
