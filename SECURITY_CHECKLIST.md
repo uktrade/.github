@@ -27,12 +27,22 @@ To add the new security policy, follow these instructions:
 1. Scroll down to the **Apply configurations** sections, and enter the name of the repository to be made public in the filter input field
 1. Use the checkbox next to the results list to select all repositories being made public, then use the **Apply configuration** button to select the **Default DBT security** configuration
 1. A confirmation modal will appear displaying a summary of the action being made. Click the apply button
-1. In the repository that has had the new policy applied, nvaigate to the **Advanced Security** page in the repository settings. At the top of the page there should be a banner message **Modifications to some settings have been blocked by organization administrators.**
+1. In the repository that has had the new policy applied, navigate to the **Advanced Security** page in the repository settings. At the top of the page there should be a banner message **Modifications to some settings have been blocked by organization administrators.**
+
+## Ensure CODEOWNERS file exists
+
+The organisation rulesets require a CODEOWNERS file to be present in the repository. If you don't already have one of these, github has produced [documentation explaining](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) what they are and why they are used.
+
+## Copying the SECURITY_CHECKLIST.md file
+
+To allow tracking of repositories that have successfully completed the reopening process, this file must be copied to the root of your repository and each of the items in the Checklist marked as completed
 
 ## Checklist
 
-- [ ] `pre-commit` installation instructions followed
-- [ ] Organisation custom properties added
-- [ ] DBT security policy applied
-- [ ] Organisation rulesets are applied. This should happen automatically once the custom properties are added, but it can be verified in the /settings/rules page
-- [ ] A CODEOWNERS file has been created at the root of the repo
+- [ ] Setup the pre-commit hook framework
+- [ ] Setup custom properties on the repository
+- [ ] Apply the correct github security policy
+- [ ] Ensure CODEOWNERS file exists
+- [ ] Copying the SECURITY_CHECKLIST.md file
+- [ ] Wording TBC - understanding risk of committing to public repos
+- [ ] Link TBC - link to understanding github security
