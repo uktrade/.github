@@ -18,6 +18,7 @@ A set of github tags have been created at an organisation level, these must be a
 
 - `is_docker`: If this repository builds a docker image, this tag should be added to run docker related github workflows
 - `language`: All languages used by this repository should be selected, and github workflows will run with dedicated checks on that language.
+- `ddat_portfolio`: The portfolio inside DDAT this repository belongs to. If your portfolio is missing, this can be added by raising an SRE ticket.
 
 ## Apply the correct github security policy
 
