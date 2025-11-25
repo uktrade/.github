@@ -6,7 +6,6 @@ This checklist is designed to make it easier to improve the security posture of 
 - This checklist must be copied over to the root of the repository.
 - The repository steward is responsible for populating the checklist, or at least approving the related pull request.
 - Any feedback should be shared with the GitHub Security working group.
-  For more details about the security features please refer to the [GitHub Standards](https://github.com/uktrade/github-standards) repo.
 
 ## Checklist
 
@@ -14,13 +13,13 @@ This checklist is designed to make it easier to improve the security posture of 
 - [ ] [Setup custom properties on the repository](#setup-custom-properties-on-the-repository)
 - [ ] [Apply the correct github security policy](#apply-the-correct-github-security-policy)
 - [ ] [Ensure CODEOWNERS file exists](#ensure-codeowners-file-exists)
-- [ ] [Copying the SECURITY_CHECKLIST.md file](#copying-the-security_checklistmd-file)
-- [ ] Wording TBC - understanding risk of committing to public repos
-- [ ] Link TBC - link to understanding github security
+- [ ] [Copy the SECURITY_CHECKLIST.md file](#copy-the-security_checklistmd-file)
+- [ ] [Review the GitHub CI/CD overview](#review-the-github-cicd-overview)
+- [ ] [Review the GitHub Safety Tips](#review-github-safety-tips)
 - [ ] [Add Steward to Repository access](#add-at-least-one-steward-to-repository-access)
 - [ ] [Review and limit maintainers with admin rights to the strict minimum](#review-and-limit-maintainers-with-admin-rights-to-the-strict-minimum)
-- [ ] [Review Pull Request template](#review-pull-request-template)
-- [ ] [Review SECURITY.md policy](#review-securitymd-policy)
+- [ ] [Review the Pull Request template](#review-pull-request-template)
+- [ ] [Review the SECURITY.md policy](#review-securitymd-policy)
 
 ## Setup the pre-commit hook framework
 
@@ -58,9 +57,18 @@ To add the new security policy, follow these instructions:
 
 The organisation rulesets require a CODEOWNERS file to be present in the repository. If you don't already have one of these, github has produced [documentation explaining](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) what they are and why they are used.
 
-## Copying the SECURITY_CHECKLIST.md file
+## Copy the SECURITY_CHECKLIST.md file
 
 To allow tracking of repositories that have successfully completed the reopening process, this file must be copied to the root of your repository and each of the items in the Checklist marked as completed
+
+## Review the GitHub CI/CD overview
+
+Internal contributors to the repository should review the CI/CD overview below
+![CI/CD overview](assets/CI-CD%20pipeline.svg)
+
+## Review GitHub Safety Tips
+
+Internal contributors to the repository should review the [GitHub Safety Tips](https://uktrade.atlassian.net/wiki/x/n4AEKQE)
 
 ## Add at least one steward to repository access
 
@@ -89,3 +97,9 @@ If your repository does not already contain a pull_request_template.md file, by 
 ## Review SECURITY.md policy
 
 This repository contain the SECURITY.md file, which is inherited by all repositories in the uktrade organisation account. This file should be read and understood by the repository steward, and discussed with the team to ensure all engineers understand the tooling that has been put in place
+
+## More information
+
+For more information about GitHub security standards, please refer [to this link](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Guidelines%20and%20Policies/GitHub%20Security%20Standards%20v0.5.docx?d=wb29cd9b99ca042deb5c0cd8d670966d9&csf=1&web=1&e=6ITbnL)
+
+For more details about the security features please refer to the [GitHub Standards](https://github.com/uktrade/github-standards) repo.
