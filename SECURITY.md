@@ -30,11 +30,11 @@ The uktrade account makes use of custom github properties to enforce branch prot
 
 ### Code scanning
 
-All uktrade repositories with the new security policied applied have CodeQL scanning enabled. Individual repositories can apply their own advanced scanning rules if required
+All uktrade repositories with the new security policy applied have CodeQL scanning enabled. Individual repositories can apply their own advanced scanning rules if required
 
 ### Push protection
 
-To block known secrets being commited into github, all repositories with the new security policied applied will have push protection enabled and enforced.
+To block known secrets being committed into github, all repositories with the new security policy applied will have push protection enabled and enforced.
 
 ### Branch protection
 

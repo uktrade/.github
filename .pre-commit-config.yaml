@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/uktrade/github-standards
-    rev: v0.0.19
+    rev: v1.0.1
     hooks:
       - id: validate-security-scan
       - id: run-security-scan
