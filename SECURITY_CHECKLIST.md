@@ -53,6 +53,18 @@ To add the new security policy, follow these instructions:
 1. A confirmation modal will appear displaying a summary of the action being made. Click the apply button
 1. In the repository that has had the new policy applied, navigate to the **Advanced Security** page in the repository settings. At the top of the page there should be a banner message **Modifications to some settings have been blocked by organization administrators.**
 
+### Optional: Setup CodeQL to allow PRs from repository forks
+
+For most repositories, the default CodeQL configuration applied by the **Default DBT security** policy will be sufficient. However, this default configuration does not currently support scanning PRs raised from a fork of a repository. If your repository needs to accept PRs from a fork, you must follow these steps to switch to the advanced CodeQL setup:
+
+1. Open the GitHub settings page, and navigate to the Advanced Security section using the left hand menu
+1. Scroll down to the Code Scanning section, under the Tools sub-section there will be an item for CodeQL analysis
+1. Click the ... button next to Default setup text, then choose the Switch to advanced option from the menu
+1. On the popup, click the Disable CodeQL button. Although you are disabling CodeQL, there is still a branch protection rule in place that blocks a PR unless a CodeQL scan is detected. Disabling here will not allow PRs to be merged
+1. The GitHub online editor will open to create a new file called codeql.yml in your repo, and the contents of this file will be prefilled with the languages CodeQL has detected in your repo. You can modify the contents of this file if needed, however you must leave the workflow name as `CodeQL Advanced`
+1. Once happy with the workflow file contents, click the green Commit changes button to trigger a PR to merge this into the main branch
+1. Approve and merge the PR with this workflow file. Once merged, the CodeQL scan will perform an initial scan that can take a while but you can track the progress by viewing the Actions tab for your repository
+
 ## Ensure CODEOWNERS file exists
 
 The organisation rulesets require a CODEOWNERS file to be present in the repository. If you don't already have one of these, github has produced [documentation explaining](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) what they are and why they are used.
