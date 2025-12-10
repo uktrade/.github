@@ -45,6 +45,8 @@ A set of github tags have been created at an organisation level, these must be a
 
 ## Apply the correct github security policy
 
+**You must be an organisation administrator to apply this policy**
+
 To add the new security policy, follow these instructions:
 
 1. As an organisation administrator, navigate to the [security config page](https://github.com/organizations/uktrade/settings/security_products).
@@ -86,11 +88,11 @@ Internal contributors to the repository should review the [GitHub Safety Tips](h
 
 To ensure correct governance of a repository, at least one steward must be added. This will usually be the most senior engineer on the team. To add a steward to a repository:
 
-1. Open the `Collaborators and teams` settings page. The url for this is `https://github.com/uktrade/REPO_NAME/github-standards/settings/access`
-1. Use the `Add people` button to open the people finder autocomplete box.
-1. Find and click the user who is going to be a steward
-1. On the Choose a role page, select the `Steward` role.
-1. Repeat for any additional users who are going to be a steward
+1. Open the `Collaborators and teams` settings page. The url for this is `https://github.com/uktrade/REPO_NAME/settings/access`
+2. Use the `Add people` button to open the people finder autocomplete box.
+3. Find and click the user who is going to be a steward
+4. On the Choose a role page, select the `Steward` role.
+5. Repeat for any additional users who are going to be a steward
 
 ## Review and limit maintainers with admin rights to the strict minimum
 
