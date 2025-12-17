@@ -17,6 +17,7 @@ This checklist is designed to make it easier to improve the security posture of 
 - [ ] [Review the GitHub CI/CD overview](#review-the-github-cicd-overview)
 - [ ] [Review the GitHub Safety Tips](#review-github-safety-tips)
 - [ ] [Add Steward to Repository access](#add-at-least-one-steward-to-repository-access)
+- [ ] [Create an admin team for the repository](#create-an-admin-team-for-the-repository)
 - [ ] [Review and limit maintainers with admin rights to the strict minimum](#review-and-limit-maintainers-with-admin-rights-to-the-strict-minimum)
 - [ ] [Review the Pull Request template](#review-pull-request-template)
 - [ ] [Review the SECURITY.md policy](#review-securitymd-policy)
@@ -31,7 +32,7 @@ Instructions have been added to the [dbt hooks repository](https://github.com/uk
 
 ## Setup custom properties on the repository
 
-A set of github tags have been created at an organisation level, these must be applied to a repository to allow organisation level github actions to run on each pull request.
+A set of custom properties have been created at an organisation level. These must be applied to a repository to allow organisation level github actions to run on each pull request. To access the custom properties, go to the `https://github.com/uktrade/REPO_NAME/settings/access` page
 
 ### Mandatory custom properties
 
@@ -84,9 +85,27 @@ Internal contributors to the repository should review the CI/CD overview below
 
 Internal contributors to the repository should review the [GitHub Safety Tips](https://uktrade.atlassian.net/wiki/x/n4AEKQE)
 
+## Create an admin team for the repository
+
+To ensure correct governance of a repository, at least one steward must be added. This will usually be the most senior engineer on the team.
+
+In addition to adding at least one Steward, a new team with the admin role must be created to allow those Stewards permission to the `Collaborators and Teams` page. A large number of repositories in the uktrade account already have an admin team setup for a repo, if this is the case you can skip the below steps and simply make sure all the Stewards are part of that admin group. If your repository does not have an admin team, follow these steps:
+
+1. Open the `Collaborators and teams` settings page. The url for this is `https://github.com/uktrade/REPO_NAME/settings/access`
+2. Click the `Create team` link
+3. On the Create new team page, add a Team name in the format `REPO-NAME-admin`
+4. You can optionally add a description, but leave all other options as the default
+5. Click the `Create Team` button
+6. On the next page, add all the Stewards to the new team
+7. Go back to the `Collaborators and teams` settings page. The url for this is `https://github.com/uktrade/REPO_NAME/settings/access`
+8. Click the `Add Teams` button to open the team finder autocomplete box
+9. Enter the team name you used, and click the matching result in the autocomplete box
+10. On the next screen, choose the `Admin` role
+11. Click the `Add selection` button to complete the process
+
 ## Add at least one steward to repository access
 
-To ensure correct governance of a repository, at least one steward must be added. This will usually be the most senior engineer on the team. To add a steward to a repository:
+To add a steward to a repository:
 
 1. Open the `Collaborators and teams` settings page. The url for this is `https://github.com/uktrade/REPO_NAME/settings/access`
 2. Use the `Add people` button to open the people finder autocomplete box.
