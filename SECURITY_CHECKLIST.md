@@ -16,7 +16,6 @@ This checklist is designed to make it easier to improve the security posture of 
 - [ ] [Copy the SECURITY_CHECKLIST.md file](#copy-the-security_checklistmd-file)
 - [ ] [Review the GitHub CI/CD overview](#review-the-github-cicd-overview)
 - [ ] [Review the GitHub Safety Tips](#review-github-safety-tips)
-- [ ] [Add Steward to Repository access](#add-at-least-one-steward-to-repository-access)
 - [ ] [Create an admin team for the repository](#create-an-admin-team-for-the-repository)
 - [ ] [Review and limit maintainers with admin rights to the strict minimum](#review-and-limit-maintainers-with-admin-rights-to-the-strict-minimum)
 - [ ] [Review the Pull Request template](#review-pull-request-template)
@@ -102,16 +101,6 @@ In addition to adding at least one Steward, a new team with the admin role must 
 9. Enter the team name you used, and click the matching result in the autocomplete box
 10. On the next screen, choose the `Admin` role
 11. Click the `Add selection` button to complete the process
-
-## Add at least one steward to repository access
-
-To add a steward to a repository:
-
-1. Open the `Collaborators and teams` settings page. The url for this is `https://github.com/uktrade/REPO_NAME/settings/access`
-2. Use the `Add people` button to open the people finder autocomplete box.
-3. Find and click the user who is going to be a steward
-4. On the Choose a role page, select the `Steward` role.
-5. Repeat for any additional users who are going to be a steward
 
 ## Review and limit maintainers with admin rights to the strict minimum
 
