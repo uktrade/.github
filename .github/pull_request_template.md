@@ -1,29 +1,30 @@
-<!---
-THIS PR TEMPLATE IS CURRENTLY UNDER DEVELOPMENT AND IS SUBJECT TO CHANGE
---->
+# Description
 
-## What
+Please include a summary of the changes and the related issue including relevant motivation and context. Please also include a link to the corresponding JIRA ticket this merge request addresses.
 
-<!---
-What is this PR doing, e.g. implementations, algorithms, etc.?
- * Set the scene - you probably have a lot of context in your head that the reader doesn't have.
- * Explain like I'm 5 - try to make as few assumptions as possible about the reader
- * Use pictures, screenshots, or a diagram if you can, for example https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-diagrams#creating-mermaid-diagrams
---->
+## Contributors
 
-## Why
+Let's acknowledge the people who contributed to the work.
 
-<!---
-Why is this change happening, e.g. goals, use cases, stories, etc.?
- * Explain what the problem was that this PR addresses.
- * Explain why this solution was chosen, and any alternatives considered.
- * Mention any assumptions, deliberately ignored edge-cases, or changes that are left for later.
---->
+## Type of change
+
+- [ ] Refactoring (made code better without changing its behaviour)
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 
 ## How this has been tested
 
-- [ ] I have tested locally
-- [ ] Testing not required
+Please describe the tests that you ran to verify your changes.
+
+If they are not automated tests please explain why and provide screenshots and/or instructions so they can reproduced.
+
+## Checklist
+
+- [ ] I have performed a self-review of my code
+- [ ] I have commented my code in hard-to-understand areas
+- [ ] I have made corresponding changes to the documentation
+- [ ] My changes generate no new warnings
 
 ## Reviewer Checklist
 
