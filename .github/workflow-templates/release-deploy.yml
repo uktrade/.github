@@ -1,0 +1,128 @@
+name: Release Promotion (Dev → Stage → Prod
+
+on:
+  release:
+    types: [ published ]
+
+
+jobs:
+  build:
+    name: "01 • Build (once)"
+    runs-on: ubuntu-latest
+    outputs:
+      artifact_version: ${{ steps.meta.outputs.version }}
+    steps:
+      - name: Auth to AWS via OIDC
+        run: echo "Authenticated to AWS"
+      - name: Pull Platform Helper Container
+        run: echo "Pulling Platform Helper Container"        
+      - name: Pull Pull SSM Params and set vars
+        run: echo "Pulling SSM Params and setting vars"     
+      - name: Clone codebase repo
+        run: echo "Clone codebase repo" 
+      - name: Platform Helper codebase build
+        run: echo "Platform Helper codebase build"                 
+      - name: Set version/tag
+        id: meta
+        run: echo "version=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+  deploy_dev:
+    name: "02 • Deploy → Dev"
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: build
+    steps:
+      - name: Auth to AWS via OIDC
+        run: echo "Authenticated to AWS"
+      - name: Pull Platform Helper Container
+        run: echo "Pulling Platform Helper Container"        
+      - name: Pull Pull SSM Params and set vars
+        run: echo "Pulling SSM Params and setting vars"     
+      - name: Clone deploy repo
+        run: echo "Clone deploy repo" 
+      - name: Platform Helper internal service generate
+        run: echo "Platform Helper internal service generate"     
+      - name: Terraform Plan \ Terraform Apply
+        run: echo "Terraform Plan \ Terraform Apply"   
+      - name: Platform Helper internal service deploy
+        run: echo "Platform Helper internal service deploy \ Deploying ${{ needs.build.outputs.artifact_version }} to Dev"           
+      - name: Update ALB Rules
+        run: echo "update alb rules"  
+
+  test_dev:
+    name: "03 • Test → Dev"
+    runs-on: ubuntu-latest
+    needs: deploy_dev
+    steps:
+      - name: Security Tests - Tenable WAS Scan
+        run: echo "Running SAST using Tenable WAS"
+      - name: Integration Tests - pytest
+        run: echo "Running integration tests using pytest"
+
+  deploy_stage:
+    name: "04 • Deploy → Stage"
+    runs-on: ubuntu-latest
+    environment: stage
+    needs: test_dev
+    steps:
+      - name: Auth to AWS via OIDC
+        run: echo "Authenticated to AWS"
+      - name: Pull Platform Helper Container
+        run: echo "Pulling Platform Helper Container"        
+      - name: Pull Pull SSM Params and set vars
+        run: echo "Pulling SSM Params and setting vars"     
+      - name: Clone deploy repo
+        run: echo "Clone deploy repo" 
+      - name: Platform Helper internal service generate
+        run: echo "Platform Helper internal service generate"     
+      - name: Terraform Plan \ Terraform Apply
+        run: echo "Terraform Plan \ Terraform Apply"   
+      - name: Platform Helper internal service deploy
+        run: echo "Platform Helper internal service deploy \ Deploying ${{ needs.build.outputs.artifact_version }} to Stage"           
+      - name: Update ALB Rules
+        run: echo "update alb rules"  
+
+  test_stage:
+    name: "05 • Test → Stage"
+    runs-on: ubuntu-latest
+    needs: deploy_stage
+    steps:
+      - name: Security Tests - Tenable WAS Scan
+        run: echo "Running SAST using Tenable WAS"
+      - name: Performance Tests using Locust
+        run: echo "Running performance tests using Locust"
+      - name: End2End Tests using Playwright
+        run: echo "Running e2e tests using Playwright"
+
+  deploy_prod:
+    name: "06 • Deploy → Prod"
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: test_stage
+    steps:
+      - name: Auth to AWS via OIDC
+        run: echo "Authenticated to AWS"
+      - name: Pull Platform Helper Container
+        run: echo "Pulling Platform Helper Container"        
+      - name: Pull Pull SSM Params and set vars
+        run: echo "Pulling SSM Params and setting vars"     
+      - name: Clone deploy repo
+        run: echo "Clone deploy repo" 
+      - name: Platform Helper internal service generate
+        run: echo "Platform Helper internal service generate"     
+      - name: Terraform Plan \ Terraform Apply
+        run: echo "Terraform Plan \ Terraform Apply"   
+      - name: Platform Helper internal service deploy
+        run: echo "Platform Helper internal service deploy \ Deploying ${{ needs.build.outputs.artifact_version }} to Prod"           
+      - name: Update ALB Rules
+        run: echo "update alb rules"  
+
+  test_prod:
+    name: "07 • Test → Prod"
+    runs-on: ubuntu-latest
+    needs: deploy_prod
+    steps:
+      - name: Smoke Tests - curl urls
+        run: echo "Running smoke tests using curl"
+      - name: Performance Tests using Locust
+        run: echo "Running performance tests using Locust"
