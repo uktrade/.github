@@ -1,0 +1,7 @@
+
+{
+  "name": "Demo-DBT Platform Release Promotion",
+  "description": "Standardised Dev → Stage → Prod promotion workflow using the DBT Platform Helper and REBOOT-compliant SDLC controls.",
+  "iconName": "rocket",
+  "filePatterns": ["Dockerfile", "src/**", "deploy/**"]
+}
