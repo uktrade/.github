@@ -14,13 +14,11 @@ This checklist is designed to make it easier to improve the security posture of 
 - [ ] [Apply the correct github security policy](#apply-the-correct-github-security-policy)
 - [ ] [Ensure CODEOWNERS file exists](#ensure-codeowners-file-exists)
 - [ ] [Copy the SECURITY_CHECKLIST.md file](#copy-the-security_checklistmd-file)
-- [ ] [Review the GitHub CI/CD overview](#review-the-github-cicd-overview)
-- [ ] [Review the GitHub Safety Tips](#review-github-safety-tips)
 - [ ] [Add Steward to Repository access](#add-at-least-one-steward-to-repository-access)
 - [ ] [Create an admin team for the repository](#create-an-admin-team-for-the-repository)
 - [ ] [Review and limit maintainers with admin rights to the strict minimum](#review-and-limit-maintainers-with-admin-rights-to-the-strict-minimum)
 - [ ] [Review the Pull Request template](#review-pull-request-template)
-- [ ] [Review the SECURITY.md policy](#review-securitymd-policy)
+- [ ] [Read GitHub documents](#read-github-documents)
 
 ## Setup the pre-commit hook framework
 
@@ -32,16 +30,19 @@ Instructions have been added to the [dbt hooks repository](https://github.com/uk
 
 ## Setup custom properties on the repository
 
-A set of custom properties have been created at an organisation level. These must be applied to a repository to allow organisation level github actions to run on each pull request. To access the custom properties, go to the `https://github.com/uktrade/REPO_NAME/settings/access` page
+A set of custom properties have been created at an organisation level. These must be applied to a repository to allow organisation level github actions to run on each pull request. To access the custom properties, go to the `https://github.com/uktrade/REPO_NAME/settings/custom-properties` page.
+
+Once these custom properties are applied, any open PRs in your repo will end up in a blocked state. GitHub PR checks are triggered by a commit, adding a check to your repo using these custom properties will not retrospectively start the checks for that commit. There are a number of ways to retrigger the checks, the easiest is using this git command. You can amend the commit message to match any naming convention used by your repo:
+
+`git commit --allow-empty -m "ci: retrigger PR workflows" && git push`
 
 ### Mandatory custom properties
 
 - `reusable_workflow_opt_in`: This one has to be applied and set to `true` to allow this repository to apply the correct organisation branch protection ruleset and run the necessary github workflows on each PR
-- `ddat_portfolio`: The portfolio inside DDAT this repository belongs to. If your portfolio is missing, this can be added by raising an SRE ticket.
+- `scs_portfolio`: The portfolio inside DDAT this repository belongs to. If your portfolio is missing, this can be added by raising an SRE ticket.
 
 ### Optional custom properties
 
-- `is_docker`: If this repository builds a docker image, this tag should be added to run docker related github workflows
 - `language`: All languages used by this repository should be selected, and github workflows will run with dedicated checks on that language.
 
 ## Apply the correct github security policy
@@ -74,16 +75,11 @@ The organisation rulesets require a CODEOWNERS file to be present in the reposit
 
 ## Copy the SECURITY_CHECKLIST.md file
 
-To allow tracking of repositories that have successfully completed the reopening process, this file must be copied to the root of your repository and each of the items in the Checklist marked as completed
+To allow tracking of repositories that have successfully completed the reopening process, this file must be copied to your repository and each of the items in the Checklist marked as completed. The file must be placed in one of the following locations in your repo:
 
-## Review the GitHub CI/CD overview
-
-Internal contributors to the repository should review the CI/CD overview below
-![CI/CD overview](https://raw.githubusercontent.com/uktrade/.github/refs/heads/main/assets/CI-CD%20pipeline.svg)
-
-## Review GitHub Safety Tips
-
-Internal contributors to the repository should review the [GitHub Safety Tips](https://uktrade.atlassian.net/wiki/x/n4AEKQE)
+- The root
+- The .github folder
+- The docs folder
 
 ## Create an admin team for the repository
 
@@ -127,9 +123,37 @@ If your repository does not already contain a pull_request_template.md file, by 
 - [ ] I have reviewed the PR and ensured no secret values are present
 ```
 
-## Review SECURITY.md policy
+## Read GitHub documents
+
+There are a number of documents that have to be read and understood. These are listed in the sections below
+
+### Review SECURITY.md policy
 
 This repository contain the SECURITY.md file, which is inherited by all repositories in the uktrade organisation account. This file should be read and understood by the repository steward, and discussed with the team to ensure all engineers understand the tooling that has been put in place
+
+### Review the GitHub CI/CD overview
+
+Internal contributors to the repository should review the CI/CD overview below
+![CI/CD overview](https://raw.githubusercontent.com/uktrade/.github/refs/heads/main/assets/CI-CD%20pipeline.svg)
+
+### Review GitHub Safety Tips
+
+Internal contributors to the repository should review the [GitHub Safety Tips](https://uktrade.atlassian.net/wiki/x/n4AEKQE)
+
+### Message to team
+
+You can use the below template message to send to your team with links to all the above documents
+
+```
+@Everyone please read through the following:
+- [The DBT SECURITY.md file](https://github.com/uktrade/.github/blob/main/SECURITY.md)
+- [GitHub Safety Tips](https://uktrade.atlassian.net/wiki/x/n4AEKQE)
+- [Our CI/CD overview](https://raw.githubusercontent.com/uktrade/.github/refs/heads/main/assets/CI-CD%20pipeline.svg)
+
+Leave a :thumbsup: on this message to confirm when you're done. We need a :thumbsup: from all contributors to comply with DBT's repo safety standards, and the whole thing should only take 15 minutes.
+
+Please raise any questions here, and if we need to discuss further I can put some time in.
+```
 
 ## More information
 
