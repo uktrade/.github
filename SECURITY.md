@@ -48,23 +48,5 @@ As these rules are applied as an organisation ruleset, it is not possible for re
 
 ### Secrets
 
-#### What is a secret?
+Information on secrets and what to do in the event of a leak can be found [here](https://dbis.sharepoint.com/sites/DDaTDirectorate/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FDDaTDirectorate%2FShared%20Documents%2FWork%20%2D%20GitHub%20Security&viewid=dd1da0fb%2Db2c8%2D4ba1%2D91f9%2Dcc9dc433938c).
 
-A secret is any sensitive piece of information you want to limit access to. It will **always** include strings like API keys, passwords, database credentials or anything else that provides authenticated access to a system. This is not an exhaustive list, however, and you should consider any piece of information you don't want an unintended program/person to have access to a secret. This *may* include strings like Slack webhook URLs, for example. If leaked, a bad actor could use it to constantly spam a Slack channel - although they would not be able to retrieve any sensitive data from authenticated endpoints, it could be used maliciously. It is always better to err on the side of caution and treat anything potentially sensitive as a secret. 
-
-#### How should you handle secrets?
-
-Software should be designed and composed in such a way that secrets are **never** exposed in plain text in the source code, configuration files or logs. This could mean programmatically retrieving secrets from a secure location, like AWS Secrets Manager, or deriving secrets from environment variables at runtime. Secrets should always be used by *reference* and not by *value*. This can be achieved by:
-
-- using a `.env` file for local development, and adding it to the `.gitignore` file so it can never be committed to the remote repository. You'd then source this file in your code and derive the secret values from it. 
-- using AWS Secrets Manager or Systems Manager to store secrets, and pulling them in at runtime using your container definition when deploying to AWS.
-
-#### What if I accidentally leak a secret?
-
-If you discover a potential leak, either through GitHub Secrets Scanning, when reviewing code or through monitoring, you must:
-
-1. Inform the Cyber team / SOC.
-2. Immediately make the repository containing the secret private.
-3. Immediately revoke/rotate the secret at the provider.
-4. Make a new commit removing the secret from the source code.
-5. Make changes to ensure the code handles the secret according to this guidance going forward.
