@@ -48,5 +48,7 @@ As these rules are applied as an organisation ruleset, it is not possible for re
 
 ### Secrets
 
-Information on secrets and what to do in the event of a leak can be found [here](https://dbis.sharepoint.com/sites/DDaTDirectorate/Shared%20Documents/Forms/AllItems.aspx?id=%2Fsites%2FDDaTDirectorate%2FShared%20Documents%2FWork%20%2D%20GitHub%20Security&viewid=dd1da0fb%2Db2c8%2D4ba1%2D91f9%2Dcc9dc433938c).
+Information on secrets and their management can be found [here](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Guidelines%20and%20Policies/GitHub%20Security%20Standards%20v0.6.docx?d=w022dea8105074e36af5450797083c297&csf=1&web=1&e=SR5out).
+
+Instructions on what to do in the event of a leak can be found [here](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Incident%20Response/GitHub%20Repository%20Incident%20Playbook.docx?d=w9ba04ffa4a7c4ff38faaaf12ff030c94&csf=1&web=1&e=yZF5dO).
 
