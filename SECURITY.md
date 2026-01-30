@@ -1,8 +1,8 @@
 # Security Policy
 
-The Department for Business and Trade (DBT) supports businesses to invest, grow and export, creating jobs and opportunities across the country. Read more about what we do on [GOV.UK](https://www.gov.uk/government/organisations/department-for-business-and-trade/about).
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+These instructions are aimed at the general public.
 
 If you believe you have found a security vulnerability, please submit your report to us using [here](https://hackerone.com/2680e4cd-0436-42a5-bd2a-37fd86367276/embedded_submissions/new)
 In your report please include details of:
@@ -20,59 +20,25 @@ Vulnerability reporting guidelines
 
 The DBT Cyber Team will attempt to make contact with the affected owner. However, the affected owner holds responsibility for resolving the issue.
 
-## Repository security
+## Handling secrets
 
-A new organisation github policy has been created that will enforce a set of security checks we expect a repository in the uktrade account to have. This policy is enabled by default for any new repositories, however existing repositories need to have it applied to them before they can be made public. The expectation is that once enough repositories have been switched from the legacy security policy to the new security policy, this new security policy is enforced across all repositories within the uktrade account
-
-### Custom properties
-
-The uktrade account makes use of custom github properties to enforce branch protection rules and run organisation level github actions. New properties can be added by logging into github using a uktrade account and using the [custom props page](https://github.com/organizations/uktrade/settings/custom-properties)
-
-### Code scanning
-
-All uktrade repositories with the new security policy applied have CodeQL scanning enabled. Individual repositories can apply their own advanced scanning rules if required
-
-### Push protection
-
-To block known secrets being committed into github, all repositories with the new security policy applied will have push protection enabled and enforced.
-
-### Branch protection
-
-An organisation ruleset has been created to apply a minimum set of branch protection rules to each public repository in the uktrade account. These rules are to be seen as the minimum, and repository admins might decide to add additional rules to their own repositories. Organisation admins and repository admins have been added to the bypass list for this branch protection ruleset. The protection rules that will be applied to each repository are:
-
-- A PR is required for merges into the default branch (usually main)
-- At least 1 approver is required before a PR can be merged
-- Any conversations on the PR must be marked as resolved
-
-As these rules are applied as an organisation ruleset, it is not possible for repository admins to add their own rules that reduce this level of protection. As an example, a repository admin could add a ruleset that drops the required number of approvers to 0 but that would have no effect as the organisation ruleset would take precedence. They could add a ruleset that sets the number of approvers to 3, and as this is not reducing the organisation ruleset protection this would take precedence
-
-### Secrets
+These instructions are aimed at developers in DBT, and links are only available to delelopers in DBT.
 
 Information on secrets and their management can be found [here](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Guidelines%20and%20Policies/GitHub%20Security%20Standards%20v0.6.docx?d=w022dea8105074e36af5450797083c297&csf=1&web=1&e=SR5out).
 
 Instructions on what to do in the event of a leak can be found [here](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Incident%20Response/GitHub%20Repository%20Incident%20Playbook.docx?d=w9ba04ffa4a7c4ff38faaaf12ff030c94&csf=1&web=1&e=yZF5dO).
 
-### Security Checklist
+## Security Checklist
 
-**The below should be copied into a SECURITY_CHECKLIST.md file at the root of your repository and completed.**
+DBT has various processes to improve the security posture of our GitHub repositories.
 
-```
-# Security Checklist
-
-This checklist is designed to make it easier to improve the security posture of a GitHub repository.
-
-- It is mandatory for public repositories.
-- This checklist must be copied over to the root of the repository.
-- The repository steward is responsible for populating the checklist, or at least approving the related pull request.
-- Any feedback should be shared with the GitHub Security working group.
-
-## Checklist
+Please follow this checklist to setup and review these processes.
 
 - [ ] [Setup the pre-commit hook framework](#setup-the-pre-commit-hook-framework)
 - [ ] [Setup custom properties on the repository](#setup-custom-properties-on-the-repository)
 - [ ] [Apply the correct github security policy](#apply-the-correct-github-security-policy)
 - [ ] [Ensure CODEOWNERS file exists](#ensure-codeowners-file-exists)
-- [ ] [Copy the SECURITY_CHECKLIST.md file](#copy-the-security_checklistmd-file)
+- [ ] [Create the SECURITY_CHECKLIST.md file](#create-the-security_checklistmd-file)
 - [ ] [Review the GitHub CI/CD overview](#review-the-github-cicd-overview)
 - [ ] [Review the GitHub Safety Tips](#review-github-safety-tips)
 - [ ] [Add Steward to Repository access](#add-at-least-one-steward-to-repository-access)
@@ -80,6 +46,8 @@ This checklist is designed to make it easier to improve the security posture of 
 - [ ] [Review and limit maintainers with admin rights to the strict minimum](#review-and-limit-maintainers-with-admin-rights-to-the-strict-minimum)
 - [ ] [Review the Pull Request template](#review-pull-request-template)
 - [ ] [Review the SECURITY.md policy](#review-securitymd-policy)
+- [ ] [Review branch protection rules](#review-branch-protection-rules)
+- [ ] [Review push protection](#review-push-protection)
 
 ## Setup the pre-commit hook framework
 
@@ -91,7 +59,9 @@ Instructions have been added to the [dbt hooks repository](https://github.com/uk
 
 ## Setup custom properties on the repository
 
-A set of custom properties have been created at an organisation level. These must be applied to a repository to allow organisation level github actions to run on each pull request. To access the custom properties, go to the `https://github.com/uktrade/REPO_NAME/settings/access` page
+The uktrade account makes use of custom github properties to enforce branch protection rules and run organisation level github actions. New properties can be added by logging into github using a uktrade account and using the [custom props page](https://github.com/organizations/uktrade/settings/custom-properties).
+
+The following custom properties must be applied to a repository to allow organisation level github actions to run on each pull request. To access the custom properties, go to the `https://github.com/uktrade/REPO_NAME/settings/access` page.
 
 ### Mandatory custom properties
 
@@ -105,6 +75,8 @@ A set of custom properties have been created at an organisation level. These mus
 
 ## Apply the correct github security policy
 
+A new organisation github policy has been created that will enforce a set of security checks we expect a repository in the uktrade account to have. This policy is enabled by default for any new repositories, however existing repositories need to have it applied to them before they can be made public. The expectation is that once enough repositories have been switched from the legacy security policy to the new security policy, this new security policy is enforced across all repositories within the uktrade account
+
 **You must be an organisation administrator to apply this policy**
 
 To add the new security policy, follow these instructions:
@@ -117,7 +89,9 @@ To add the new security policy, follow these instructions:
 
 ### Optional: Setup CodeQL to allow PRs from repository forks
 
-For most repositories, the default CodeQL configuration applied by the **Default DBT security** policy will be sufficient. However, this default configuration does not currently support scanning PRs raised from a fork of a repository. If your repository needs to accept PRs from a fork, you must follow these steps to switch to the advanced CodeQL setup:
+All uktrade repositories with the **Default DBT security** policy have CodeQL scanning enabled. Individual repositories can apply their own advanced scanning rules if required.
+
+For most repositories, the default CodeQL configuration will be sufficient. However, this default configuration does not currently support scanning PRs raised from a fork of a repository. If your repository needs to accept PRs from a fork, you must follow these steps to switch to the advanced CodeQL setup:
 
 1. Open the GitHub settings page, and navigate to the Advanced Security section using the left hand menu
 1. Scroll down to the Code Scanning section, under the Tools sub-section there will be an item for CodeQL analysis
@@ -131,9 +105,9 @@ For most repositories, the default CodeQL configuration applied by the **Default
 
 The organisation rulesets require a CODEOWNERS file to be present in the repository. If you don't already have one of these, github has produced [documentation explaining](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) what they are and why they are used.
 
-## Copy the SECURITY_CHECKLIST.md file
+## Create the `SECURITY_CHECKLIST.md` file
 
-To allow tracking of repositories that have successfully completed the reopening process, this file must be copied to the root of your repository and each of the items in the Checklist marked as completed
+To allow tracking of repositories that have successfully completed the reopening process, the security checklist must be copied to the root of your repository under `SECURITY_CHECKLIST.md` and each of the items in the checklist marked as completed.
 
 ## Review the GitHub CI/CD overview
 
@@ -178,7 +152,7 @@ You should review who has been assigned the github `admin` role. The `write` rol
 
 ## Review Pull Request template
 
-If your repository does not already contain a pull_request_template.md file, by default you will inherit the template from this repository. If you are already using your own template, you should add this section to remind reviewers they should be ensuring no secret values are visible
+If your repository does not already contain a pull_request_template.md file, by default you will inherit the template from this repository. If you are already using your own template, you should add this section to remind reviewers they should be ensuring no secret values are visible:
 
 ## Reviewer Checklist
 
@@ -189,11 +163,25 @@ If your repository does not already contain a pull_request_template.md file, by 
 
 This repository contain the SECURITY.md file, which is inherited by all repositories in the uktrade organisation account. This file should be read and understood by the repository steward, and discussed with the team to ensure all engineers understand the tooling that has been put in place
 
+### Review branch protection rules
+
+An organisation ruleset has been created to apply a minimum set of branch protection rules to each public repository in the uktrade account. These rules are to be seen as the minimum, and repository admins might decide to add additional rules to their own repositories. Organisation admins and repository admins have been added to the bypass list for this branch protection ruleset. The protection rules that will be applied to each repository are:
+
+- A PR is required for merges into the default branch (usually main)
+- At least 1 approver is required before a PR can be merged
+- Any conversations on the PR must be marked as resolved
+
+As these rules are applied as an organisation ruleset, it is not possible for repository admins to add their own rules that reduce this level of protection. As an example, a repository admin could add a ruleset that drops the required number of approvers to 0 but that would have no effect as the organisation ruleset would take precedence. They could add a ruleset that sets the number of approvers to 3, and as this is not reducing the organisation ruleset protection this would take precedence
+
+### Review push protection
+
+To block known secrets being committed into github, all repositories with the new security policy applied have [push protection](https://docs.github.com/en/code-security/concepts/secret-security/about-push-protection) enabled and enforced. We have also defined [custom patterns](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/customize-leak-detection/defining-custom-patterns-for-secret-scanning).
+
 ## More information
 
 For more information about GitHub security standards, please refer [to this link](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Guidelines%20and%20Policies/GitHub%20Security%20Standards%20v0.5.docx?d=wb29cd9b99ca042deb5c0cd8d670966d9&csf=1&web=1&e=6ITbnL)
 
 For more details about the security features please refer to the [GitHub Standards](https://github.com/uktrade/github-standards) repo.
-```
+
 
 
