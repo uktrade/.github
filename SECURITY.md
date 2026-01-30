@@ -45,3 +45,10 @@ An organisation ruleset has been created to apply a minimum set of branch protec
 - Any conversations on the PR must be marked as resolved
 
 As these rules are applied as an organisation ruleset, it is not possible for repository admins to add their own rules that reduce this level of protection. As an example, a repository admin could add a ruleset that drops the required number of approvers to 0 but that would have no effect as the organisation ruleset would take precedence. They could add a ruleset that sets the number of approvers to 3, and as this is not reducing the organisation ruleset protection this would take precedence
+
+### Secrets
+
+Information on secrets and their management can be found [here](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Guidelines%20and%20Policies/GitHub%20Security%20Standards%20v0.6.docx?d=w022dea8105074e36af5450797083c297&csf=1&web=1&e=SR5out).
+
+Instructions on what to do in the event of a leak can be found [here](https://dbis.sharepoint.com/:w:/r/sites/DDaTDirectorate/Shared%20Documents/Work%20-%20GitHub%20Security/Github%20Security%20Framework/Incident%20Response/GitHub%20Repository%20Incident%20Playbook.docx?d=w9ba04ffa4a7c4ff38faaaf12ff030c94&csf=1&web=1&e=yZF5dO).
+
