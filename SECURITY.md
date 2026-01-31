@@ -2,7 +2,7 @@
 **DBT GitHub Security Policy**
 
 ## Summary  
-This policy explains how the public can responsibly [report vulnerabilities](reporting-a-vulnerability), and how DBT developers must protect sensitive information and follow DBT’s required security controls when working in GitHub.
+This policy explains how the public can responsibly [report vulnerabilities](reporting-a-vulnerability), and how DBT developers must protect [sensitive information](handling-secrets) and follow DBT’s required [security controls](security-controls) when working in GitHub.
 
 ---
 
@@ -35,7 +35,7 @@ Instructions on what to do in the event of a leak can be found [here](https://db
 **In summary, developers must:**
 - Never commit secrets or sensitive data to GitHub  
 - Use secure storage for managing secrets
-- Ensure no secrets appear in PRs, logs, config files, or history
+- Ensure no secrets appear in PRs, logs or config files
 - Follow incident‑response steps immediately if a leak occurs  
 
 ---
@@ -64,28 +64,19 @@ Use this checklist to ensure your repository implements these processes:
 - [ ] **Ensure a `CODEOWNERS` file exists**  
       See: [CODEOWNERS](#codeowners)
 
-- [ ] **Review GitHub Safety Tips (internal)**  
+- [ ] **Review GitHub Safety Tips**  
       See: [GitHub Safety Tips](#github-safety-tips)
 
-- [ ] **Add at least one Repository Steward**  
-      See: [Repository Access & Governance](#repository-access--governance)
-
-- [ ] **Create an admin team**  
-      See: [Repository Access & Governance](#repository-access--governance)
-
-- [ ] **Limit admin rights to the strict minimum**  
+- [ ] **Review Repository Access and Governance**  
       See: [Repository Access & Governance](#repository-access--governance)
 
 - [ ] **Review the Pull Request template**  
       See: [Pull Request Template](#pull-request-template)
 
-- [ ] **Review this SECURITY.md**  
-      See: [SECURITY.md](#securitymd)
-
 - [ ] **Review branch protection rules**  
       See: [Branch Protection Rules](#branch-protection-rules)
 
-- [ ] **Confirm push protection is enabled**  
+- [ ] **Review push protection**  
       See: [Push Protection](#push-protection)  
 
 ---
@@ -148,39 +139,38 @@ To add the new security policy, follow these instructions:
 ### CodeQL for Fork‑Based PRs (Optional)
 
 The default DBT GitHub Security policy does not currently support scanning PRs raised from a fork of a repository.
-If PRs from forks must be supported, switch to **Advanced** CodeQL to generate a `codeql.yml` workflow.  
-[1](https://dbis.sharepoint.com/sites/DDaTDirectorate/_layouts/15/Doc.aspx?sourcedoc=%7B022DEA81-0507-4E36-AF54-50797083C297%7D&file=GitHub%20Security%20Standards.docx&action=default&mobileredirect=true)
+If PRs from forks must be supported, switch to **Advanced** CodeQL to generate a `codeql.yml` workflow:
 
----
+1. Open the GitHub settings page, and navigate to the Advanced Security section using the left hand menu
+1. Scroll down to the Code Scanning section, under the Tools sub-section there will be an item for CodeQL analysis
+1. Click the ... button next to Default setup text, then choose the Switch to advanced option from the menu
+1. On the popup, click the Disable CodeQL button. Although you are disabling CodeQL, there is still a branch protection rule in place that blocks a PR unless a CodeQL scan is detected. Disabling here will not allow PRs to be merged
+1. The GitHub online editor will open to create a new file called codeql.yml in your repo, and the contents of this file will be prefilled with the languages CodeQL has detected in your repo. You can modify the contents of this file if needed, however you must leave the workflow name as `CodeQL Advanced`
+1. Once happy with the workflow file contents, click the green Commit changes button to trigger a PR to merge this into the main branch
+1. Approve and merge the PR with this workflow file. Once merged, the CodeQL scan will perform an initial scan that can take a while but you can track the progress by viewing the Actions tab for your repository
 
 ### CODEOWNERS
 
 Repositories must include a `CODEOWNERS` file:
 https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
----
-
 ### GitHub Safety Tips
 
 Internal contributors should review the [GitHub Safety Tips](https://uktrade.atlassian.net/wiki/x/n4AEKQE) to understand how to protect themselves when coding in the open.
-
----
 
 ### Repository Access & Governance
 
 TBC
 
----
-
 ### Pull Request Template
 
 If your repository does not already contain a pull_request_template.md file, you will inherit the DBT template by default. If you are already using your own template, you should add this section to remind reviewers they should be ensuring no secret values are visible:
 
+```
 ### Reviewer Checklist
 
 - [ ] I have reviewed the PR and ensured no secret or sensitive data is present
-
----
+```
 
 ### Branch Protection Rules
 
@@ -194,10 +184,11 @@ Organisation admins and repository admins have been added to the bypass list for
 
 Repository admins might decide to add additional rules to their own repositories. It is not possible for repository admins to add their own rules that reduce this level of protection. As an example, a repository admin could add a ruleset that drops the required number of approvers to 0 but that would have no effect as the organisation ruleset would take precedence. They could add a ruleset that sets the number of approvers to 3, and as this is not reducing the organisation ruleset protection this would take precedence.
 
----
-
 ## Push Protection
 
 Push protection is required for all repositories using the default DBT GitHub security policy.  
-DBT also defines [custom secret‑scanning patterns](https://docs.github.com/en/code-security/concepts/secret-security/about-push-protection)
+DBT also defines [custom secret‑scanning patterns](https://docs.github.com/en/code-security/concepts/secret-security/about-push-protection).
+
+You should confirm that push protection is enabled on your repository.
+
 Please raise a ticket with SRE if you need additional patterns.
