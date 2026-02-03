@@ -1,5 +1,4 @@
 # SECURITY.md
-**DBT GitHub Security Policy**
 
 ## Summary  
 This policy explains how the public can responsibly [report vulnerabilities](reporting-a-vulnerability), and how DBT developers must protect [sensitive information](handling-secrets) and follow DBT’s required [security controls](security-controls) when working in GitHub.
