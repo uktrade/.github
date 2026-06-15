@@ -1,0 +1,68 @@
+```mermaid
+%%{
+  init: {
+    'flowchart': {
+      'subGraphTitleMargin': { 'top': 5, 'bottom': 5 }
+    }
+  }
+}%%
+flowchart LR
+ subgraph PCH["Pre-commit hooks"]
+        C[["Trufflehog: <br> Secrets"]]
+        D[["Presidio: <br> Sensitive data"]]
+  end
+ subgraph GHA["GitHub actions"]
+    direction LR
+        n4[["`**GitHub**: <br> Dependency review <br> CodeQL`"]]
+        n6[["`**Custom**: <br>Trufflehog <br> Presidio <br> Pre-commit hook <br>verification`"]]
+        n14[["Language-specific <br>security scanning"]]
+  end
+ subgraph private["Private domain"]
+        A(["Local <br>feature branch"])
+        B[["IDE scanning <br> (TBC)"]]
+        PCH
+        GHS["GHS"]
+  end
+ subgraph public["Public domain"]
+        n3(["Remote <br> feature branch"])
+        s5["s5"]
+        GHA
+        s6["s6"]
+        s7["s7"]
+  end
+ subgraph s5[" "]
+        n15@{ shape: doc, label: "GitHub PR <br>Template"}
+        n9(["Pull request"])
+  end
+ subgraph s6[" "]
+        n11@{ shape: doc, label: "GitHub branch <br>protection rules"}
+        n10[["Peer review"]]
+  end
+ subgraph s7[" "]
+        n13[["GitHub: <br>Dependabot⏱️"]]
+        n12(["Default branch"])
+  end
+ subgraph GHS["GitHub Secret Protection"]
+        custom@{ shape: doc, label: "Custom patterns"}
+        n2[["Secret scanning"]]
+        push[["Push protection"]]
+  end
+ subgraph WF["Code Security Workflow"]
+      private
+      public
+  end
+
+    A -- write --> B
+    B -- commit --> PCH
+    PCH -- push --> GHS
+    private --publish--> public
+    GHA --pass--> n10
+    n10 -- merge --> n12
+    n3 -- raise --> n9
+    n9 --> GHA
+
+    classDef BiggerTitle font-size:22px,fill:white;
+    class public,private BiggerTitle;
+    classDef WFdef font-size:25px,fill:white,stroke:white;
+    class WF WFdef;
+```
