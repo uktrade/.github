@@ -5,8 +5,9 @@
     }
   }
 }%%
-flowchart LR
+flowchart
  subgraph PCH["Pre-commit hooks"]
+      direction LR
         C[["Trufflehog: <br> Secrets"]]
         D[["Presidio: <br> Sensitive data"]]
   end
@@ -16,13 +17,14 @@ flowchart LR
         n6[["`**Custom**: <br>Trufflehog <br> Presidio <br> Pre-commit hook <br>verification`"]]
         n14[["Language-specific <br>security scanning"]]
   end
- subgraph private["Private domain"]
+ subgraph local["Local"]
         A(["Local <br>feature branch"])
         B[["IDE scanning <br> (TBC)"]]
         PCH
-        GHS["GHS"]
+        
   end
- subgraph public["Public domain"]
+ subgraph cloud["Cloud"]
+        GHS["GHS"]
         n3(["Remote <br> feature branch"])
         s5["s5"]
         GHA
@@ -42,25 +44,26 @@ flowchart LR
         n12(["Default branch"])
   end
  subgraph GHS["GitHub Secret Protection"]
+      direction LR
         custom@{ shape: doc, label: "Custom patterns"}
         n2[["Secret scanning"]]
         push[["Push protection"]]
   end
  subgraph WF["Code Security Workflow"]
-      private
-      public
+      local
+      cloud
   end
 
     A -- write --> B
     B -- commit --> PCH
     PCH -- push --> GHS
-    private --publish--> public
+    GHS --publish--> n3
     GHA --pass--> n10
     n10 -- merge --> n12
     n3 -- raise --> n9
     n9 --> GHA
 
     classDef BiggerTitle font-size:22px,fill:white;
-    class public,private BiggerTitle;
+    class cloud,local BiggerTitle;
     classDef WFdef font-size:25px,fill:white,stroke:white;
     class WF WFdef;
