@@ -50,10 +50,12 @@ flowchart LR
     B -- commit --> PCH
     PCH -- push --> GHS
     GHS --publish--> n3
+    n3 -- raise --> n9
+    n9 --trigger--> GHA
     GHA --pass--> n10
     n10 -- merge --> n12
-    n3 -- raise --> n9
-    n9 --traigger--> GHA
 
     classDef BiggerTitle font-size:18px,fill:white;
     class cloud,local BiggerTitle;
+    classDef Grey fill:grey, color:white;
+    class A,n3,n12 Grey;
