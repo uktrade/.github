@@ -7,6 +7,7 @@ config:
     primaryColor: 'white'
     primaryBorderColor: 'black'
     clusterBkg: 'lightgrey'
+    clusterBorder: 'black'
 ---
 flowchart LR
  subgraph PCH["Pre-commit hooks"]
