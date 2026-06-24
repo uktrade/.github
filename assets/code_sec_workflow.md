@@ -1,5 +1,12 @@
+```mermaid
 ---
 title: Code Security Workflow
+config:
+  theme: 'base'
+  themeVariables:
+    primaryColor: 'white'
+    primaryBorderColor: 'black'
+    clusterBkg: 'lightgrey'
 ---
 flowchart LR
  subgraph PCH["Pre-commit hooks"]
@@ -58,5 +65,8 @@ flowchart LR
 
     classDef BiggerTitle font-size:18px,fill:white;
     class remote,local BiggerTitle;
-    classDef Grey fill:grey, color:white;
-    class A,n3,n12 Grey;
+    classDef Green fill:green, color:white, stroke:black;
+    class A,n3,n12 Green;
+    classDef Grey fill:grey, color:white, stroke:black;
+    class n14,B Grey;
+```
