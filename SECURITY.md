@@ -45,37 +45,37 @@ DBT uses several processes to strengthen the security posture of our GitHub repo
 
 Use this checklist to ensure your repository implements these processes:
 
-- [ ] **Create or update `SECURITY_CHECKLIST.md`**  
+- [x] **Create or update `SECURITY_CHECKLIST.md`**  
       See: [SECURITY_CHECKLIST.md](#security_checklistmd)
 
-- [ ] **Review the CI/CD overview**  
+- [x] **Review the CI/CD overview**  
       See: [CI/CD Overview](#cicd-overview)
 
-- [ ] **Set up the pre‑commit hook framework**  
+- [ x] **Set up the pre‑commit hook framework**  
       See: [Pre‑Commit Hooks](#precommit-hooks)
 
-- [ ] **Set up custom GitHub properties**  
+- [x ] **Set up custom GitHub properties**  
       See: [Custom GitHub Properties](#custom-github-properties)
 
-- [ ] **Apply the DBT GitHub security policy**  
+- [x ] **Apply the DBT GitHub security policy**  
       See: [GitHub Security Policy](#github-security-policy)
 
-- [ ] **Ensure a `CODEOWNERS` file exists**  
+- [ x] **Ensure a `CODEOWNERS` file exists**  
       See: [CODEOWNERS](#codeowners)
 
-- [ ] **Review GitHub Safety Tips**  
+- [x ] **Review GitHub Safety Tips**  
       See: [GitHub Safety Tips](#github-safety-tips)
 
-- [ ] **Review Repository Access and Governance**  
+- [x ] **Review Repository Access and Governance**  
       See: [Repository Access & Governance](#repository-access--governance)
 
-- [ ] **Review the Pull Request template**  
+- [ x] **Review the Pull Request template**  
       See: [Pull Request Template](#pull-request-template)
 
-- [ ] **Review branch protection rules**  
+- [ x] **Review branch protection rules**  
       See: [Branch Protection Rules](#branch-protection-rules)
 
-- [ ] **Review push protection**  
+- [x ] **Review push protection**  
       See: [Push Protection](#push-protection)  
 
 ---
