@@ -28,7 +28,6 @@ Please include:
 - Do **not** share vulnerability details beyond DBT and the asset owner
 - HackerOne accounts are optional, but allow you to receive updates on your report
 - You must agree to HackerOne’s Terms, Privacy Policy, and Disclosure Guidelines
-- NCC Group, DBT’s external triage partner, triages reports within **five working days**
 - DBT’s Cyber Security team assists with coordination, but the asset owner is responsible for remediation
 
 **Safe harbour**
