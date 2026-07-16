@@ -9,7 +9,7 @@ Last checked against the policy: _add date_
 Actions each contributor takes for themselves, so everyone knows what the controls are and why they exist.
 
 - [ ] [All internal contributors have read the DBT GitHub Security Policy](https://github.com/uktrade/.github/blob/main/SECURITY.md)
-- [ ] [All internal contributors have completed code security training](https://github.com/uktrade/.github/blob/main/SECURITY.md#security-training)
+- [ ] [All internal contributors have completed code security training in the last year](https://github.com/uktrade/.github/blob/main/SECURITY.md#security-training)
 - [ ] [All internal contributors have reviewed the GitHub Safety Tips on coding in the open](https://github.com/uktrade/.github/blob/main/SECURITY.md#github-safety-tips)
 
 ## 2. Organisation-applied controls — an organisation administrator applies, a repository administrator verifies
@@ -27,6 +27,7 @@ These enforce security checks centrally and cannot be weakened at repository lev
 Defences set up within the repository itself.
 
 - [ ] [A `.pre-commit-config.yaml` file exists so the organisation-approved hooks run before commits](https://github.com/uktrade/.github/blob/main/SECURITY.md#pre-commit-hooks)
+- [ ] [Repository access has been reviewed](https://github.com/uktrade/.github/blob/main/SECURITY.md#repository-access)
 - [ ] [A `CODEOWNERS` file exists so the right people review changes](https://github.com/uktrade/.github/blob/main/SECURITY.md#codeowners)
 - [ ] [The pull request template reminds reviewers to check for secrets](https://github.com/uktrade/.github/blob/main/SECURITY.md#pull-request-template)
 - [ ] [Advanced CodeQL is set up if the repository accepts PRs from forks (optional)](https://github.com/uktrade/.github/blob/main/SECURITY.md#codeql-for-fork-based-prs-optional)

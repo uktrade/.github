@@ -92,7 +92,7 @@ Actions each contributor takes for themselves.
 
 #### Security Training
 
-All internal contributors must complete the following free courses and download the certificates where applicable. Choose the language that you are most familiar with.
+All internal contributors must have completed the following free courses in the last year. Download the certificates where applicable. Choose the language that you are most familiar with.
 
 | Course | Time | Notes |
 |---|---|---|
@@ -167,6 +167,14 @@ Repositories must include a `.pre-commit-config.yaml` that runs the organisation
 As a backstop, a GitHub Actions workflow (applied via the repository's custom properties) re-runs the same scans and blocks any PR where the hooks were skipped locally. Repository administrators can still merge past a failing check.
 
 For more information and setup guidance, see the [uktrade/github-standards](https://github.com/uktrade/github-standards) repository.
+
+#### Repository access
+
+Review repository access and ensure all users have the appropriate level of permission. Access must be granted through GitHub teams and not directly to individual users.
+
+Review people with **Admin** permissions to ensure access is justified, as this role can modify repository settings, manage access, and bypass certain repository controls.
+
+If a user no longer requires access, they must be removed from the relevant team by contacting the SRE team or raising a PR against the [`uktrade/terraform-github`](https://github.com/uktrade/terraform-github) repository.
 
 #### CODEOWNERS
 
