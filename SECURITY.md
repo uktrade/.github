@@ -62,15 +62,21 @@ Vulnerabilities can enter through your own code or through the dependencies it r
 
 We are also investigating IDE scanning and non-GitHub native code security scanning solutions.
 
-Any alerts these scans raise must be triaged, not ignored:
-
-- Fix the vulnerability, or dismiss the alert with a documented reason (e.g. false positive, not exploitable in this context)
-- A PR blocked by a failing security check should be fixed, not bypassed
-- Administrators who do bypass a check must record the justification on the PR and raise an issue to resolve the vulnerability
+Any alerts these scans raise must be triaged, not ignored. Fix the vulnerability, or dismiss the alert with a documented reason (e.g. false positive, not exploitable in this context)
 
 Alerts must be resolved — fixed or dismissed with a reason — within the timescales provided in the [Vulnerability Management Policy](https://static.workspace.trade.gov.uk/documents/CYB.07_-_Vulnerability_Management_Policy_-_v.1.0_20251127162547.pdf) (DBT staff access only).
 
 Do not discuss unfixed vulnerability details anywhere public — vulnerability alerts are visible only to users with write access, but comments on PRs and issues in public repositories are visible to everyone.
+
+### Bypassing Security Controls
+
+Some GitHub security controls can be bypassed by repository or organisation administrators. This should only happen in exceptional circumstances and not as a substitute for fixing security issues.
+
+When a control is bypassed:
+
+- The justification must be documented as a comment on the PR
+- Any resulting security risk must be understood and accepted
+- Follow-up remediation work should be tracked and completed
 
 ---
 
@@ -115,7 +121,7 @@ Defences set up within the repository itself.
 
 Repositories must include a `.pre-commit-config.yaml` that runs the organisation-approved [pre-commit](https://pre-commit.com/) hooks, and each contributor must install them locally. The hooks use [Trufflehog](https://github.com/trufflesecurity/trufflehog) to detect secrets and [Presidio](https://microsoft.github.io/presidio/) to detect sensitive data. They run on your machine before a commit is even created — the earliest and cheapest point to stop a leak, since anything that reaches GitHub must be treated as compromised.
 
-As a backstop, a GitHub Actions workflow (applied via the repository's custom properties) re-runs the same scans and blocks any PR where the hooks were skipped locally. Repository administrators can still merge past a failing check.
+As a backstop, a GitHub Actions workflow (applied via the repository's custom properties) re-runs the same scans and blocks any PR where the pre-commit hooks were skipped locally.
 
 For more information and setup guidance, see the [uktrade/github-standards](https://github.com/uktrade/github-standards) repository.
 
@@ -184,15 +190,13 @@ Branch protection stops unreviewed code reaching the default branch — the vers
 - At least 1 approver is required before a PR can be merged
 - Any conversations on the PR must be marked as resolved
 
-Organisation administrators and repository administrators have been added to the bypass list for this branch protection ruleset.
-
 Repository administrators may add additional rules to their own repositories, but cannot weaken the organisation ruleset: where rules overlap, the most restrictive rule applies. For example, a repository ruleset that drops the required number of approvers to 0 would have no effect, while one that raises it to 3 would apply.
 
 #### GitHub Secret Protection
 
 The DBT GitHub security configuration enables two complementary features. [Push protection](https://docs.github.com/en/code-security/concepts/secret-security/push-protection) blocks pushes containing high-confidence secret formats, stopping them before they reach the repository's history. [Secret scanning](https://docs.github.com/en/code-security/secret-scanning/introduction/about-secret-scanning) covers a broader range, detecting secrets already committed and raising alerts in the **Security** tab. Both can apply [custom patterns](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/customize-leak-detection/define-custom-patterns) for DBT-specific secrets.
 
-Confirm both features are enabled on your repository. Never bypass a push-protection block — remove the secret from your commit instead. If you need additional custom patterns, raise a ticket with the SRE team.
+Confirm both features are enabled on your repository. If you need additional custom patterns, raise a ticket with the SRE team.
 
 #### Vulnerability Scanning
 
