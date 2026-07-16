@@ -107,55 +107,6 @@ Internal contributors should review the [GitHub Safety Tips](https://uktrade.atl
 
 ---
 
-### Organisation-Applied Controls
-
-An organisation administrator applies these centrally, and they cannot be weakened at repository level. The security configuration and custom properties are the mechanism; branch protection and push protection are the enforced results — verify they are active rather than configuring them yourself.
-
-#### GitHub Security Configuration
-
-DBT has introduced an organisation-wide GitHub [security configuration](https://docs.github.com/en/code-security/how-tos/secure-at-scale/configure-organization-security/establish-complete-coverage/apply-custom-configuration) that applies the required security checks to every repository. New repositories get this configuration by default, but existing ones must have it enabled before they can be made public. Over time, it will fully replace the old configuration across the `uktrade` organisation.
-
-An organisation administrator must apply it — follow the [step-by-step instructions](https://github.com/uktrade/.github/blob/main/docs/github-security-configuration.md).
-
-#### Custom GitHub Properties
-
-DBT uses [custom GitHub properties](https://docs.github.com/en/organizations/managing-organization-settings/managing-custom-properties-for-repositories-in-your-organization) to enforce branch protection rules and run organisation-level GitHub Actions workflows. They describe what kind of repository this is, so the organisation's automation can apply the checks relevant to it — if they are missing or wrong, your repository may not get the right protections.
-
-View or set custom properties under **Settings → Custom properties**:
-`https://github.com/uktrade/REPO_NAME/settings/custom-properties`
-
-**Mandatory**
-- `reusable_workflow_opt_in` — set to `true`
-- `scs_portfolio` — the portfolio associated with your Senior Civil Servant (SCS). If your portfolio is missing, this can be added by raising a ticket with the SRE team
-
-**Optional**
-- `is_docker` — for repositories that build Docker images
-- `language` — select all languages used by the repository, so the organisation-level workflows run language-specific checks
-
-#### Branch Protection Rules
-
-Branch protection stops unreviewed code reaching the default branch — the version of the code that gets deployed and that others build on. An organisation [ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets) has been created to apply a minimum set of branch protection rules:
-
-- A PR is required for merges into the default branch (usually `main`)
-- At least 1 approver is required before a PR can be merged
-- Any conversations on the PR must be marked as resolved
-
-Organisation administrators and repository administrators have been added to the bypass list for this branch protection ruleset.
-
-Repository administrators may add additional rules to their own repositories, but cannot weaken the organisation ruleset: where rules overlap, the most restrictive rule applies. For example, a repository ruleset that drops the required number of approvers to 0 would have no effect, while one that raises it to 3 would apply.
-
-#### GitHub Secret Protection
-
-The DBT GitHub security configuration enables two complementary features. [Push protection](https://docs.github.com/en/code-security/concepts/secret-security/push-protection) blocks pushes containing high-confidence secret formats, stopping them before they reach the repository's history. [Secret scanning](https://docs.github.com/en/code-security/secret-scanning/introduction/about-secret-scanning) covers a broader range, detecings secrets already committed and raising alerts in the **Security** tab. Both can apply [custom patterns](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/customize-leak-detection/define-custom-patterns) for DBT-specific secrets.
-
-Confirm both features are enabled on your repository. Never bypass a push-protection block — remove the secret from your commit instead. If you need additional custom patterns, raise a ticket with the SRE team.
-
-#### Vulnerability Scanning
-
-The DBT GitHub security configuration also enables the features described under [Handling Vulnerabilities](#handling-vulnerabilities) — CodeQL, Dependabot, Dependabot security updates and dependency review. Confirm these are active on your repository.
-
----
-
 ### Repository-Level Controls
 
 Defences set up within the repository itself.
@@ -192,11 +143,62 @@ If your repository does not already contain a `pull_request_template.md` file, y
 - [ ] I have reviewed the PR and ensured no secret values are present
 ```
 
+#### Custom GitHub Properties
+
+DBT uses [custom GitHub properties](https://docs.github.com/en/organizations/managing-organization-settings/managing-custom-properties-for-repositories-in-your-organization) to enforce branch protection rules and run organisation-level GitHub Actions workflows. They describe what kind of repository this is, so the organisation's automation can apply the checks relevant to it — if they are missing or wrong, your repository may not get the right protections.
+
+View or set custom properties under **Settings → Custom properties**:
+`https://github.com/uktrade/REPO_NAME/settings/custom-properties`
+
+**Mandatory**
+- `reusable_workflow_opt_in` — set to `true`
+- `scs_portfolio` — the portfolio associated with your Senior Civil Servant (SCS). If your portfolio is missing, this can be added by raising a ticket with the SRE team
+
+**Optional**
+- `is_docker` — for repositories that build Docker images
+- `language` — select all languages used by the repository, so the organisation-level workflows run language-specific checks
+
 #### CodeQL for Fork-Based PRs (Optional)
 
 The DBT GitHub security configuration does not currently support scanning PRs raised from a fork of a repository. Fork PRs typically come from contributors outside the organisation, so leaving them unscanned would create a gap in coverage.
 
 If PRs from forks must be supported, switch to [**Advanced** CodeQL](https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/configure-code-scanning/configuring-advanced-setup-for-code-scanning) — follow the [step-by-step instructions](https://github.com/uktrade/.github/blob/main/docs/codeql-advanced-setup.md).
+
+---
+
+### Organisation-Applied Controls
+
+An organisation administrator applies these centrally, and they cannot be weakened at repository level. The security configuration and rulesets are the mechanism; branch protection and push protection are the enforced results — verify they are active rather than configuring them yourself.
+
+#### GitHub Security Configuration
+
+DBT has introduced an organisation-wide GitHub [security configuration](https://docs.github.com/en/code-security/how-tos/secure-at-scale/configure-organization-security/establish-complete-coverage/apply-custom-configuration) that applies the required security checks to every repository. New repositories get this configuration by default, but existing ones must have it enabled before they can be made public. Over time, it will fully replace the old configuration across the `uktrade` organisation.
+
+An organisation administrator must apply it — follow the [step-by-step instructions](https://github.com/uktrade/.github/blob/main/docs/github-security-configuration.md).
+
+#### Branch Protection Rules
+
+Branch protection stops unreviewed code reaching the default branch — the version of the code that gets deployed and that others build on. An organisation [ruleset](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets) has been created to apply a minimum set of branch protection rules:
+
+- A PR is required for merges into the default branch (usually `main`)
+- At least 1 approver is required before a PR can be merged
+- Any conversations on the PR must be marked as resolved
+
+Organisation administrators and repository administrators have been added to the bypass list for this branch protection ruleset.
+
+Repository administrators may add additional rules to their own repositories, but cannot weaken the organisation ruleset: where rules overlap, the most restrictive rule applies. For example, a repository ruleset that drops the required number of approvers to 0 would have no effect, while one that raises it to 3 would apply.
+
+#### GitHub Secret Protection
+
+The DBT GitHub security configuration enables two complementary features. [Push protection](https://docs.github.com/en/code-security/concepts/secret-security/push-protection) blocks pushes containing high-confidence secret formats, stopping them before they reach the repository's history. [Secret scanning](https://docs.github.com/en/code-security/secret-scanning/introduction/about-secret-scanning) covers a broader range, detecting secrets already committed and raising alerts in the **Security** tab. Both can apply [custom patterns](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/customize-leak-detection/define-custom-patterns) for DBT-specific secrets.
+
+Confirm both features are enabled on your repository. Never bypass a push-protection block — remove the secret from your commit instead. If you need additional custom patterns, raise a ticket with the SRE team.
+
+#### Vulnerability Scanning
+
+The DBT GitHub security configuration also enables the features described under [Handling Vulnerabilities](#handling-vulnerabilities) — CodeQL, Dependabot, Dependabot security updates and dependency review. Confirm these are active on your repository.
+
+---
 
 ## About This Policy
 
