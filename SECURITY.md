@@ -88,7 +88,7 @@ DBT uses several processes to strengthen the security posture of our GitHub repo
 
 ### Security Checklist
 
-The security checklist turns those controls into concrete steps to confirm for your own repository. Copy [`SECURITY_CHECKLIST.md`](https://github.com/uktrade/.github/blob/main/templates/SECURITY_CHECKLIST.md) into your repository root and work through it from top to bottom, ticking each item once you have confirmed it and noting the date you checked. Its items follow the same order as the detailed guidance below, and each says who can action it. The result is a visible record of your repository's security posture for your team, reviewers and auditors.
+The security checklist turns those controls into concrete steps to confirm for your own repository. Copy [`SECURITY_CHECKLIST.md`](https://github.com/uktrade/.github/blob/main/templates/SECURITY_CHECKLIST.md) into your repository root and work through it from top to bottom, ticking each item once you have confirmed it. Its items follow the same order as the detailed guidance below, and each says who can action it. The result is a visible record of your repository's security posture for your team, reviewers and auditors. The Security Checklist must be refreshed at least once a year, using up-to-date documentation and noting the date last checked.
 
 ---
 
@@ -206,4 +206,4 @@ The DBT GitHub security configuration also enables the features described under 
 
 ## About This Policy
 
-This policy is defined in DBT's [`.github` repository](https://github.com/uktrade/.github) as a [community health file](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file), so every `uktrade` repository without its own `SECURITY.md` inherits it automatically. Do not add a `SECURITY.md` to your own repository — to suggest changes, raise a PR against the [`.github` repository](https://github.com/uktrade/.github) instead.
+The [DBT GitHub Security Policy](https://github.com/uktrade/.github/blob/main/SECURITY.md) is defined as a [community health file](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file), so every `uktrade` repository without its own `SECURITY.md` inherits it automatically. Do not add a `SECURITY.md` to your own repository — to suggest changes, raise a PR against the [`.github` repository](https://github.com/uktrade/.github) instead.

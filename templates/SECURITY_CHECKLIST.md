@@ -4,7 +4,7 @@ Work through this checklist from top to bottom, ticking each item once you have 
 
 Last checked against the policy: _add date_
 
-## 1. Contributor controls — every contributor
+## 1. Contributor controls
 
 Actions each contributor takes for themselves, so everyone knows what the controls are and why they exist.
 
@@ -12,7 +12,7 @@ Actions each contributor takes for themselves, so everyone knows what the contro
 - [ ] [All internal contributors have completed code security training in the last year](https://github.com/uktrade/.github/blob/main/SECURITY.md#security-training)
 - [ ] [All internal contributors have reviewed the GitHub Safety Tips on coding in the open](https://github.com/uktrade/.github/blob/main/SECURITY.md#github-safety-tips)
 
-## 2. Repository-level controls — repository administrators and contributors
+## 2. Repository-level controls
 
 Defences set up within the repository itself.
 
@@ -23,9 +23,9 @@ Defences set up within the repository itself.
 - [ ] [The mandatory custom GitHub properties are set](https://github.com/uktrade/.github/blob/main/SECURITY.md#custom-github-properties)
 - [ ] [Advanced CodeQL is set up if the repository accepts PRs from forks (optional)](https://github.com/uktrade/.github/blob/main/SECURITY.md#codeql-for-fork-based-prs-optional)
 
-## 3. Organisation-applied controls — an organisation administrator applies, a repository administrator verifies
+## 3. Organisation-applied controls
 
-These enforce security checks centrally and cannot be weakened at repository level.
+Controls applied by an organisation administrator and verified by a repository administrator.
 
 - [ ] [The DBT GitHub security configuration is applied to the repository](https://github.com/uktrade/.github/blob/main/SECURITY.md#github-security-configuration)
 - [ ] [Branch protection rules apply to the default branch](https://github.com/uktrade/.github/blob/main/SECURITY.md#branch-protection-rules)
