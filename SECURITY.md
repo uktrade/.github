@@ -196,7 +196,7 @@ Repository administrators may add additional rules to their own repositories, bu
 
 The DBT GitHub security configuration enables two complementary features. [Push protection](https://docs.github.com/en/code-security/concepts/secret-security/push-protection) blocks pushes containing high-confidence secret formats, stopping them before they reach the repository's history. [Secret scanning](https://docs.github.com/en/code-security/secret-scanning/introduction/about-secret-scanning) covers a broader range, detecting secrets already committed and raising alerts in the **Security** tab. Both can apply [custom patterns](https://docs.github.com/en/code-security/how-tos/secure-your-secrets/customize-leak-detection/define-custom-patterns) for DBT-specific secrets.
 
-Confirm both features are enabled on your repository. If you need additional custom patterns, raise a ticket with the SRE team.
+Confirm both features are enabled for your repository under Settings → Advanced Security → Secret Protection. If you need additional custom patterns, raise a ticket with the SRE team.
 
 #### Vulnerability Scanning
 
