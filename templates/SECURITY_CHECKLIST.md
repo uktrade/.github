@@ -28,6 +28,6 @@ Defences set up within the repository itself.
 Controls applied by an organisation administrator and verified by a repository administrator.
 
 - [ ] [The DBT GitHub security configuration is applied to the repository](https://github.com/uktrade/.github/blob/main/SECURITY.md#github-security-configuration)
-- [ ] [Branch protection rules apply to the default branch](https://github.com/uktrade/.github/blob/main/SECURITY.md#branch-protection-rules)
+- [ ] [The default branch protection ruleset is applied to the default branch](https://github.com/uktrade/.github/blob/main/SECURITY.md#branch-protection-rules)
 - [ ] [GitHub Secret Protection is enabled and blocking secrets](https://github.com/uktrade/.github/blob/main/SECURITY.md#github-secret-protection)
 - [ ] [The relevant vulnerability scans are active](https://github.com/uktrade/.github/blob/main/SECURITY.md#vulnerability-scanning)
