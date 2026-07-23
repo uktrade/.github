@@ -200,7 +200,7 @@ Confirm both features are enabled for your repository under Settings → Advance
 
 #### Vulnerability Scanning
 
-The DBT GitHub security configuration also enables the features described under [Handling Vulnerabilities](#handling-vulnerabilities) — CodeQL, Dependabot, Dependabot security updates and dependency review. Confirm these are active on your repository.
+The DBT GitHub security configuration and rulesets also enables the features described under [Handling Vulnerabilities](#handling-vulnerabilities) — CodeQL, Dependabot, Dependabot security updates and dependency review. Confirm these are active on your repository.
 
 ---
 
