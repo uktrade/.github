@@ -190,6 +190,8 @@ Branch protection stops unreviewed code reaching the default branch — the vers
 - At least 1 approver is required before a PR can be merged
 - Any conversations on the PR must be marked as resolved
 
+Confirm the default branch protection policy ruleset is applied under Settings → Rules → Rulesets.
+
 Repository administrators may add additional rules to their own repositories, but cannot weaken the organisation ruleset: where rules overlap, the most restrictive rule applies. For example, a repository ruleset that drops the required number of approvers to 0 would have no effect, while one that raises it to 3 would apply.
 
 #### GitHub Secret Protection
