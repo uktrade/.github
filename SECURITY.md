@@ -174,7 +174,7 @@ If PRs from forks must be supported, switch to [**Advanced** CodeQL](https://doc
 
 ### Organisation-Applied Controls
 
-An organisation administrator applies these centrally, and they cannot be weakened at repository level. The security configuration and rulesets are the mechanism; branch protection and push protection are the enforced results — verify they are active rather than configuring them yourself.
+An organisation administrator applies these centrally, and they cannot be weakened at repository level. Verify they are active rather than configuring them yourself.
 
 #### GitHub Security Configuration
 
