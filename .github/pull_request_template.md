@@ -28,4 +28,4 @@ If they are not automated tests please explain why and provide screenshots and/o
 
 ## Reviewer Checklist
 
-- [ ] I have reviewed the PR and ensured no secret values are present
+- [ ] I have reviewed the PR and ensured no secret or sensitive values are present
