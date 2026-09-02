@@ -1,8 +1,10 @@
-# BIST GitHub Security Policy
+# BIST GitHub Public Security Policy
 
-This policy explains how members of the public can responsibly [report vulnerabilities](#reporting-a-vulnerability) to the Department for Business, Innovation, Science and Trade ([BIST](https://www.gov.uk/government/organisations/department-for-business-innovation-science-and-trade)).
+This policy explains how members of the public can responsibly report vulnerabilities to the Department for Business, Innovation, Science and Trade ([BIST](https://www.gov.uk/government/organisations/department-for-business-innovation-science-and-trade)).
 
-This guidance is for members of the public and external security researchers. Internal staff should instead report vulnerabilities directly to the Cyber Security team.
+It is intended for members of the public and external security researchers. Internal staff should instead report vulnerabilities directly to the Cyber Security team, and follow the internal [Code Repository Hardening](https://platform.readme.trade.gov.uk/managed/features/code-repository-hardening/) guidelines to minimise them.
+
+## Reporting a vulnerability
 
 If you believe you have found a security vulnerability, please submit a report via our [HackerOne form](https://hackerone.com/2680e4cd-0436-42a5-bd2a-37fd86367276/embedded_submissions/new).
 
